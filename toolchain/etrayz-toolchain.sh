@@ -1,0 +1,13 @@
+export CFLAGS="-march=armv5te -mtune=arm926ej-s -msoft-float -Os"
+export CXXFLAGS="$CFLAGS"
+
+echo ""
+echo "  ╔═══════════════════════════════════════════════════╗"
+echo "  ║  EtrayZ Toolchain — ARM926EJ-S (ARMv5TEJ)        ║"
+echo "  ║  GCC 4.4.5 · EGLIBC 2.11.3 · Debian Squeeze     ║"
+echo "  ║                                                   ║"
+echo "  ║  gcc/g++/make/autoconf/pkg-config ready to use    ║"
+echo "  ║  Kernel source: /kernel (2.6.24.4 OX810SE)       ║"
+echo "  ║  Source: mount at /src  (-v ./src:/src)           ║"
+echo "  ╚═══════════════════════════════════════════════════╝"
+echo ""

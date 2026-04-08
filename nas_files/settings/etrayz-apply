@@ -1,0 +1,312 @@
+#!/bin/sh
+# etrayz-apply — Apply settings from /etc/etrayz/settings.conf to system services
+# Usage: etrayz-apply [section]  (no arg = apply all)
+
+CONF=/etc/etrayz/settings.conf
+[ -f "$CONF" ] || { echo "No settings file"; exit 1; }
+. "$CONF"
+
+SECTION="${1:-all}"
+
+apply_timezone() {
+    if [ -f "/usr/share/zoneinfo/$TIMEZONE" ]; then
+        cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+        echo "$TIMEZONE" > /etc/timezone
+    fi
+}
+
+apply_fan() {
+    case "$FAN_MODE" in
+        auto)
+            echo 2 > /sys/module/thermAndFan/parameters/min_fan_speed_ratio
+            echo 8 > /sys/module/thermAndFan/parameters/max_fan_speed_ratio
+            ;;
+        manual)
+            echo "$FAN_SPEED" > /sys/module/thermAndFan/parameters/min_fan_speed_ratio
+            echo "$FAN_SPEED" > /sys/module/thermAndFan/parameters/max_fan_speed_ratio
+            ;;
+    esac
+}
+
+apply_usb() {
+    if [ "$USB_ENABLED" = "1" ]; then
+        echo 1 > /sys/bus/usb/devices/usb1/authorized 2>/dev/null
+    else
+        echo 0 > /sys/bus/usb/devices/usb1/authorized 2>/dev/null
+    fi
+}
+
+apply_samba() {
+    mkdir -p /var/log/samba
+    cat > /etc/samba/smb.conf << SMBEOF
+[global]
+   workgroup = $SAMBA_WORKGROUP
+   server string = EtrayZ NAS
+   security = user
+   map to guest = Bad Password
+   log file = /var/log/samba/%m.log
+   max log size = 50
+   socket options = TCP_NODELAY SO_RCVBUF=65536 SO_SNDBUF=65536
+
+SMBEOF
+
+    if [ "$SAMBA_HOME_ENABLED" = "1" ]; then
+        cat >> /etc/samba/smb.conf << SMBEOF
+[home]
+   path = $SAMBA_HOME_PATH
+   browseable = yes
+   writable = $([ "$SAMBA_HOME_READONLY" = "1" ] && echo no || echo yes)
+   guest ok = $([ "$SAMBA_HOME_GUEST" = "1" ] && echo yes || echo no)
+$([ "$SAMBA_HOME_GUEST" != "1" ] && echo "   valid users = sysadmin")
+   create mask = 0664
+   directory mask = 0775
+
+SMBEOF
+    fi
+
+    if [ "$SAMBA_PUBLIC_ENABLED" = "1" ]; then
+        cat >> /etc/samba/smb.conf << SMBEOF
+[public]
+   path = $SAMBA_PUBLIC_PATH
+   browseable = yes
+   writable = $([ "$SAMBA_PUBLIC_READONLY" = "1" ] && echo no || echo yes)
+   guest ok = $([ "$SAMBA_PUBLIC_GUEST" = "1" ] && echo yes || echo no)
+   create mask = 0666
+   directory mask = 0777
+   force user = sysadmin
+
+SMBEOF
+    fi
+
+    if [ "$SAMBA_DOWNLOADS_ENABLED" = "1" ]; then
+        cat >> /etc/samba/smb.conf << SMBEOF
+[downloads]
+   path = $SAMBA_DOWNLOADS_PATH
+   browseable = yes
+   writable = $([ "$SAMBA_DOWNLOADS_READONLY" = "1" ] && echo no || echo yes)
+   guest ok = $([ "$SAMBA_DOWNLOADS_GUEST" = "1" ] && echo yes || echo no)
+   force user = sysadmin
+
+SMBEOF
+    fi
+
+    # Disk 2 share (only if disk2 is mounted)
+    if [ "$DISK2_SHARE_ENABLED" = "1" ] && mount | grep -q " ${DISK2_MOUNT:-/home2} "; then
+        cat >> /etc/samba/smb.conf << SMBEOF
+[$DISK2_SHARE_NAME]
+   path = $DISK2_MOUNT
+   browseable = yes
+   writable = $([ "$DISK2_SHARE_READONLY" = "1" ] && echo no || echo yes)
+   guest ok = $([ "$DISK2_SHARE_GUEST" = "1" ] && echo yes || echo no)
+   force user = sysadmin
+   create mask = 0666
+   directory mask = 0777
+
+SMBEOF
+    fi
+
+    /etc/init.d/samba reload >/dev/null 2>&1 || true
+}
+
+apply_transmission() {
+    /etc/init.d/transmission-daemon stop >/dev/null 2>&1 || true
+    sleep 1
+
+    TRANS_CONF="/etc/transmission-daemon/settings.json"
+    # Use sed for reliable JSON editing (no jq on Squeeze)
+    sed -i "s|\"download-dir\":.*|\"download-dir\": \"$TRANS_DOWNLOAD_DIR\",|" "$TRANS_CONF"
+    sed -i "s|\"incomplete-dir\":.*|\"incomplete-dir\": \"$TRANS_INCOMPLETE_DIR\",|" "$TRANS_CONF"
+    sed -i "s|\"incomplete-dir-enabled\":.*|\"incomplete-dir-enabled\": true,|" "$TRANS_CONF"
+
+    if [ "$TRANS_SPEED_UP" -gt 0 ] 2>/dev/null; then
+        sed -i "s|\"speed-limit-up\":.*|\"speed-limit-up\": $TRANS_SPEED_UP,|" "$TRANS_CONF"
+        sed -i "s|\"speed-limit-up-enabled\":.*|\"speed-limit-up-enabled\": true,|" "$TRANS_CONF"
+    else
+        sed -i "s|\"speed-limit-up-enabled\":.*|\"speed-limit-up-enabled\": false,|" "$TRANS_CONF"
+    fi
+
+    if [ "$TRANS_SPEED_DOWN" -gt 0 ] 2>/dev/null; then
+        sed -i "s|\"speed-limit-down\":.*|\"speed-limit-down\": $TRANS_SPEED_DOWN,|" "$TRANS_CONF"
+        sed -i "s|\"speed-limit-down-enabled\":.*|\"speed-limit-down-enabled\": true,|" "$TRANS_CONF"
+    else
+        sed -i "s|\"speed-limit-down-enabled\":.*|\"speed-limit-down-enabled\": false,|" "$TRANS_CONF"
+    fi
+
+    sed -i "s|\"ratio-limit\":.*|\"ratio-limit\": $TRANS_RATIO,|" "$TRANS_CONF"
+    sed -i "s|\"ratio-limit-enabled\":.*|\"ratio-limit-enabled\": true,|" "$TRANS_CONF"
+    sed -i "s|\"peer-port\":.*|\"peer-port\": $TRANS_PEER_PORT,|" "$TRANS_CONF"
+    sed -i "s|\"rpc-whitelist\":.*|\"rpc-whitelist\": \"127.0.0.1,$TRANS_RPC_WHITELIST\",|" "$TRANS_CONF"
+
+    # Torrent-done script for buzzer notification
+    if [ "$BEEP_TORRENT" = "1" ]; then
+        sed -i "s|\"script-torrent-done-enabled\":.*|\"script-torrent-done-enabled\": true,|" "$TRANS_CONF"
+        sed -i "s|\"script-torrent-done-filename\":.*|\"script-torrent-done-filename\": \"/usr/local/bin/etrayz-buzzer triple\",|" "$TRANS_CONF"
+    else
+        sed -i "s|\"script-torrent-done-enabled\":.*|\"script-torrent-done-enabled\": false,|" "$TRANS_CONF"
+    fi
+
+    # Create dirs
+    mkdir -p "$TRANS_DOWNLOAD_DIR" "$TRANS_INCOMPLETE_DIR" "$TRANS_WATCH_DIR" 2>/dev/null
+    chown -R debian-transmission:debian-transmission "$TRANS_DOWNLOAD_DIR" "$TRANS_INCOMPLETE_DIR" "$TRANS_WATCH_DIR" 2>/dev/null
+
+    if [ "$TRANS_ENABLED" = "1" ]; then
+        /etc/init.d/transmission-daemon start >/dev/null 2>&1 || true
+    fi
+}
+
+apply_ssh() {
+    SSHCONF="/etc/ssh/sshd_config"
+    sed -i "s/^Port .*/Port $SSH_PORT/" "$SSHCONF"
+    sed -i "s/^PermitRootLogin .*/PermitRootLogin $([ "$SSH_ROOT_LOGIN" = "1" ] && echo yes || echo no)/" "$SSHCONF"
+    sed -i "s/^PasswordAuthentication .*/PasswordAuthentication $([ "$SSH_PASSWORD_AUTH" = "1" ] && echo yes || echo no)/" "$SSHCONF"
+    /etc/init.d/ssh reload >/dev/null 2>&1 || true
+}
+
+apply_lighttpd() {
+    LCONF="/etc/lighttpd/lighttpd.conf"
+    ECONF="/etc/lighttpd/conf-enabled/20-etrayz.conf"
+
+    cat > "$ECONF" << LEOF
+# EtrayZ dual-port configuration
+# Dashboard on port $DASHBOARD_PORT, website on port $WEBSITE_PORT
+\$SERVER["socket"] == ":$WEBSITE_PORT" {
+    server.document-root = "/var/www-site"
+    index-file.names = ( "index.html" )
+}
+LEOF
+
+    # Set main port
+    sed -i "s/^server.port.*/server.port = $DASHBOARD_PORT/" "$LCONF"
+    if ! grep -q "^server.port" "$LCONF"; then
+        echo "server.port = $DASHBOARD_PORT" >> "$LCONF"
+    fi
+
+    # Auth config
+    if [ "$DASHBOARD_AUTH" = "1" ]; then
+        cat > /etc/lighttpd/conf-enabled/05-etrayz-auth.conf << AEOF
+server.modules += ( "mod_auth" )
+auth.backend = "plain"
+auth.backend.plain.userfile = "/etc/lighttpd/etrayz.passwd"
+auth.require = ( "/" => (
+    "method" => "basic",
+    "realm" => "EtrayZ NAS",
+    "require" => "valid-user"
+))
+AEOF
+        # Sync password from shadow (use sysadmin:etrayz format for plain backend)
+        # Extract current sysadmin password or use default
+        PW=$(grep "^sysadmin:" /etc/shadow | cut -d: -f2)
+        # For plain backend we need cleartext — store a separate password file
+        # Only create if doesn't exist (user manages it via settings)
+        [ -f /etc/lighttpd/etrayz.passwd ] || echo "sysadmin:etrayz" > /etc/lighttpd/etrayz.passwd
+        chmod 640 /etc/lighttpd/etrayz.passwd
+        chown root:www-data /etc/lighttpd/etrayz.passwd
+    else
+        rm -f /etc/lighttpd/conf-enabled/05-etrayz-auth.conf
+    fi
+
+    /etc/init.d/lighttpd restart >/dev/null 2>&1 || true
+}
+
+apply_aria2() {
+    cat > /etc/aria2/aria2.conf << ARIA2EOF
+dir=${ARIA2_DOWNLOAD_DIR}
+log=/var/log/aria2.log
+log-level=warn
+enable-xml-rpc=true
+xml-rpc-listen-all=true
+xml-rpc-listen-port=${ARIA2_RPC_PORT}
+max-concurrent-downloads=${ARIA2_MAX_CONCURRENT}
+max-connection-per-server=${ARIA2_MAX_CONN}
+min-split-size=5M
+split=${ARIA2_MAX_CONN}
+continue=true
+max-overall-upload-limit=${ARIA2_UPLOAD_LIMIT}
+seed-ratio=0
+input-file=/etc/aria2/aria2.session
+save-session=/etc/aria2/aria2.session
+save-session-interval=60
+ARIA2EOF
+
+    mkdir -p "${ARIA2_DOWNLOAD_DIR}" 2>/dev/null
+    chown sysadmin:sysadmin "${ARIA2_DOWNLOAD_DIR}" 2>/dev/null
+
+    if [ "$ARIA2_ENABLED" = "1" ]; then
+        /etc/init.d/aria2 restart >/dev/null 2>&1 || true
+    else
+        /etc/init.d/aria2 stop >/dev/null 2>&1 || true
+    fi
+}
+
+apply_dlna() {
+    cat > /etc/minidlna.conf << DLNAEOF
+media_dir=A,${DLNA_MEDIA_DIR}/Music
+media_dir=V,${DLNA_MEDIA_DIR}/Videos
+media_dir=P,${DLNA_MEDIA_DIR}/Pictures
+media_dir=${DLNA_MEDIA_DIR}
+db_dir=/var/lib/minidlna
+log_dir=/var/log
+log_level=warn
+port=${DLNA_PORT}
+friendly_name=${DLNA_NAME}
+serial=12345678
+model_number=1
+inotify=$([ "$DLNA_INOTIFY" = "1" ] && echo yes || echo no)
+album_art_names=Cover.jpg/cover.jpg/AlbumArtSmall.jpg/albumartsmall.jpg/AlbumArt.jpg/albumart.jpg/Album.jpg/album.jpg/Folder.jpg/folder.jpg/Thumb.jpg/thumb.jpg
+DLNAEOF
+
+    # Create media directories
+    mkdir -p "${DLNA_MEDIA_DIR}/Music" "${DLNA_MEDIA_DIR}/Videos" "${DLNA_MEDIA_DIR}/Pictures" 2>/dev/null
+    chown -R sysadmin:sysadmin "${DLNA_MEDIA_DIR}/Music" "${DLNA_MEDIA_DIR}/Videos" "${DLNA_MEDIA_DIR}/Pictures" 2>/dev/null
+
+    if [ "$DLNA_ENABLED" = "1" ]; then
+        /etc/init.d/minidlna restart >/dev/null 2>&1 || true
+    else
+        /etc/init.d/minidlna stop >/dev/null 2>&1 || true
+    fi
+}
+
+apply_disk2() {
+    # Handle mount point changes — unmount old, mount new
+    OLD_MOUNT=$(mount | grep "^/dev/sdb" | awk '{print $3}')
+    if [ -n "$OLD_MOUNT" ] && [ "$OLD_MOUNT" != "$DISK2_MOUNT" ]; then
+        umount "$OLD_MOUNT" 2>/dev/null
+    fi
+
+    if [ "$DISK2_ENABLED" = "1" ]; then
+        /etc/init.d/etrayz-disk2 start 2>/dev/null
+    else
+        /etc/init.d/etrayz-disk2 stop 2>/dev/null
+    fi
+
+    # Rebuild samba config to include/exclude disk2 share
+    apply_samba
+}
+
+# Apply requested sections
+case "$SECTION" in
+    all)
+        apply_timezone
+        apply_fan
+        apply_usb
+        apply_disk2
+        apply_aria2
+        apply_dlna
+        apply_transmission
+        apply_ssh
+        apply_lighttpd
+        ;;
+    timezone)   apply_timezone ;;
+    fan)        apply_fan ;;
+    usb)        apply_usb ;;
+    disk2)      apply_disk2 ;;
+    aria2)      apply_aria2 ;;
+    dlna)       apply_dlna ;;
+    samba)      apply_samba ;;
+    transmission) apply_transmission ;;
+    ssh)        apply_ssh ;;
+    lighttpd)   apply_lighttpd ;;
+    *)          echo "Unknown section: $SECTION"; exit 1 ;;
+esac
+
+echo "Settings applied: $SECTION"

@@ -1,0 +1,60 @@
+#!/bin/sh
+# etrayz-usbcopy — Monitor USB copy button and copy USB contents when pressed
+# Runs as a background daemon. Polls usbcopy_button GPIO every second.
+# USB LED blinks during copy, off otherwise.
+
+BUTTON=/sys/gpio/devices/usbcopy_button
+STATUS_LED=/sys/gpio/devices/usb_led
+CONF=/etc/etrayz/settings.conf
+
+# Blink LED in background — toggles on/off every 0.5s
+# Usage: start_blink; ... ; stop_blink
+start_blink() {
+    ( while true; do
+        echo 1 > $STATUS_LED
+        usleep 500000 2>/dev/null || sleep 1
+        echo 0 > $STATUS_LED
+        usleep 500000 2>/dev/null || sleep 1
+    done ) &
+    BLINK_PID=$!
+}
+
+stop_blink() {
+    [ -n "$BLINK_PID" ] && kill $BLINK_PID 2>/dev/null
+    wait $BLINK_PID 2>/dev/null
+    BLINK_PID=""
+    echo 0 > $STATUS_LED
+}
+
+while true; do
+    if [ "$(cat $BUTTON 2>/dev/null)" = "1" ]; then
+        . "$CONF"
+        TARGET="$USBCOPY_TARGET"
+        mkdir -p "$TARGET" 2>/dev/null
+
+        # Find mounted USB device
+        USB_MOUNT=$(mount | grep "/dev/sd[b-z]" | head -1 | awk '{print $3}')
+
+        if [ -n "$USB_MOUNT" ]; then
+            # Start blinking LED + beep
+            start_blink
+            /usr/local/bin/etrayz-buzzer double 2>/dev/null &
+
+            cp -r "$USB_MOUNT"/* "$TARGET"/ 2>/dev/null
+            sync
+
+            # Stop blinking, beep done
+            stop_blink
+            /usr/local/bin/etrayz-buzzer triple 2>/dev/null &
+
+            # Wait for button release
+            while [ "$(cat $BUTTON 2>/dev/null)" = "1" ]; do sleep 1; done
+        else
+            # No USB mounted — error beep
+            /usr/local/bin/etrayz-buzzer long 2>/dev/null &
+        fi
+
+        sleep 2  # debounce
+    fi
+    sleep 1
+done

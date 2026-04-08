@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EtrayZ — Settings</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Courier New',monospace;background:#0a0e17;color:#c5cdd9;min-height:100vh;display:flex}
+
+/* --- Layout --- */
+.sidebar{width:200px;min-height:100vh;background:#070b12;border-right:1px solid #1e293b;padding:16px 0;position:fixed;top:0;left:0;z-index:10;display:flex;flex-direction:column}
+.main{margin-left:200px;flex:1;padding:32px 40px 100px;max-width:740px}
+
+/* --- Sidebar --- */
+.sb-logo{text-align:center;padding:12px 16px 20px;border-bottom:1px solid #1e293b;margin-bottom:8px}
+.sb-logo a{color:#00ff88;text-decoration:none;font-size:11px;letter-spacing:2px}
+.sb-logo a:hover{text-shadow:0 0 8px rgba(0,255,136,.4)}
+.sb-nav{flex:1}
+.sb-item{display:block;padding:11px 20px;color:#5a6a7a;font-size:12px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;text-decoration:none;letter-spacing:.5px}
+.sb-item:hover{color:#c5cdd9;background:#0f1520}
+.sb-item.active{color:#00ff88;border-left-color:#00ff88;background:#0a1018}
+.sb-icon{display:inline-block;width:22px;text-align:center;margin-right:6px;font-size:13px}
+.sb-ver{text-align:center;padding:16px;font-size:9px;color:#2a3a4a;border-top:1px solid #1e293b}
+
+/* --- Sections --- */
+.section{display:none}
+.section.active{display:block}
+.sec-title{font-size:20px;color:#fff;font-weight:400;letter-spacing:2px;margin-bottom:4px}
+.sec-desc{font-size:11px;color:#5a6a7a;margin-bottom:24px}
+.sec-cursor{display:inline-block;width:8px;height:18px;background:#00ff88;margin-left:4px;animation:blink 1s step-end infinite;vertical-align:text-bottom}
+@keyframes blink{50%{opacity:0}}
+
+/* --- Panels --- */
+.panel{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:20px;margin-bottom:16px}
+.panel-title{font-size:13px;color:#fff;font-weight:bold;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.panel-title .badge{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:normal;letter-spacing:1px}
+.badge-on{background:#0a2e1a;color:#00ff88;border:1px solid #00ff88}
+.badge-off{background:#2e0a0a;color:#ff4444;border:1px solid #ff4444}
+
+/* --- Form elements --- */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field-row{display:flex;align-items:center;justify-content:space-between}
+.field-label{font-size:11px;color:#8a9aaa}
+.field-hint{font-size:10px;color:#3a4a5a;margin-top:4px}
+input[type=text],input[type=number],input[type=password],select,textarea{
+    background:#0a0e17;border:1px solid #1e293b;border-radius:4px;color:#00ff88;font-family:inherit;
+    font-size:12px;padding:8px 12px;width:100%;transition:border .2s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#00ff88}
+select{cursor:pointer;-webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a6a7a'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+select option{background:#111827;color:#c5cdd9}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+input[type=number]{width:100px}
+.input-sm{width:80px !important}
+.input-md{width:160px !important}
+.input-row{display:flex;align-items:center;gap:8px}
+.input-suffix{font-size:11px;color:#5a6a7a}
+
+/* --- Toggle switch --- */
+.toggle{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:#1e293b;border-radius:22px;cursor:pointer;transition:.2s}
+.toggle .slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#5a6a7a;border-radius:50%;transition:.2s}
+.toggle input:checked+.slider{background:#0a2e1a;border:1px solid #00ff88}
+.toggle input:checked+.slider:before{transform:translateX(18px);background:#00ff88;box-shadow:0 0 6px rgba(0,255,136,.5)}
+
+/* --- Range slider --- */
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;background:#1e293b;border-radius:4px;outline:none;margin:8px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:#00ff88;border-radius:50%;cursor:pointer;box-shadow:0 0 6px rgba(0,255,136,.4)}
+
+/* --- Buttons --- */
+.btn{padding:10px 20px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;border:1px solid;transition:all .2s;letter-spacing:1px}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:#00ff88;color:#0a0e17;border-color:#00ff88;font-weight:bold}
+.btn-primary:hover{background:#00cc6a;box-shadow:0 0 15px rgba(0,255,136,.3)}
+.btn-danger{background:transparent;color:#ff4444;border-color:#1e293b}
+.btn-danger:hover{border-color:#ff4444;background:#1a0000}
+.btn-sm{padding:6px 14px;font-size:11px}
+.btn-ghost{background:transparent;color:#5a6a7a;border-color:#1e293b}
+.btn-ghost:hover{color:#00ff88;border-color:#00ff88}
+
+/* --- Account rows --- */
+.acct-row{background:#0d1220;border:1px solid #1e293b;border-radius:6px;padding:12px;margin-bottom:8px;position:relative}
+.acct-row .acct-header{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.acct-row input[type="text"],.acct-row input[type="password"]{background:#0a0e17;border:1px solid #1e293b;color:#c5cdd9;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:12px;box-sizing:border-box}
+.acct-row input[type="text"]:focus,.acct-row input[type="password"]:focus{border-color:#00ff88;outline:none}
+.acct-row textarea{background:#0a0e17;border:1px solid #1e293b;color:#c5cdd9;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:11px;width:100%;box-sizing:border-box;height:50px;resize:vertical}
+.acct-row textarea:focus{border-color:#00ff88;outline:none}
+.acct-row label{color:#5a6a7a;font-size:10px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px}
+.acct-row .acct-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acct-row .acct-full{margin-top:8px}
+.acct-row .acct-remove{position:absolute;top:8px;right:8px;background:none;border:none;color:#ff4444;cursor:pointer;font-size:14px;padding:2px 6px;opacity:.6}
+.acct-row .acct-remove:hover{opacity:1}
+
+/* --- Footer bar --- */
+.footer-bar{position:fixed;bottom:0;left:200px;right:0;background:#070b12;border-top:1px solid #1e293b;padding:14px 40px;display:flex;gap:10px;align-items:center;z-index:10;max-width:740px}
+.footer-msg{flex:1;font-size:11px;color:#5a6a7a}
+.footer-msg.ok{color:#00ff88}
+.footer-msg.err{color:#ff4444}
+
+/* --- Share card --- */
+.share-card{background:#0a0e17;border:1px solid #1e293b;border-radius:6px;padding:14px;margin-bottom:10px}
+.share-card:last-child{margin-bottom:0}
+.share-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.share-name{font-size:13px;color:#fff;font-weight:bold}
+.share-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.share-fields .field{margin-bottom:0}
+
+/* --- Status row --- */
+.status-row{display:flex;align-items:center;gap:8px;padding:8px 0}
+.status-dot{width:8px;height:8px;border-radius:50%}
+.status-dot.on{background:#00ff88;box-shadow:0 0 6px rgba(0,255,136,.5)}
+.status-dot.off{background:#ff4444;box-shadow:0 0 6px rgba(255,68,68,.4)}
+.status-label{font-size:11px;color:#5a6a7a}
+.status-val{font-size:12px;color:#00ff88;margin-left:auto}
+
+/* --- Manual pages --- */
+.manual-page .panel{margin:0 0 16px}
+.man-content h3{color:#fff;font-size:15px;margin-bottom:12px;border-bottom:1px solid #1e293b;padding-bottom:8px}
+.man-content p{margin-bottom:8px;line-height:1.6}
+.man-content code{background:#0a0e17;border:1px solid #1e293b;border-radius:3px;padding:1px 6px;color:#00ff88;font-size:11px}
+.man-content pre{background:#0a0e17;border:1px solid #1e293b;border-radius:6px;padding:14px;font-size:11px;line-height:1.7;overflow-x:auto;color:#c5cdd9;white-space:pre-wrap;word-wrap:break-word}
+.man-content b{color:#fff}
+
+/* --- Responsive --- */
+@media(max-width:700px){
+  .sidebar{width:60px}
+  .sb-item span{display:none}
+  .sb-logo a span{display:none}
+  .sb-ver{display:none}
+  .main{margin-left:60px;padding:24px 16px 100px}
+  .footer-bar{left:60px}
+  .share-fields{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sb-logo"><a href="/"><span>&#x25C0; </span>ETRAYZ</a></div>
+  <div class="sb-nav">
+    <a class="sb-item active" data-sec="general"><span class="sb-icon">&#x2699;</span><span>General</span></a>
+    <a class="sb-item" data-sec="fan"><span class="sb-icon">&#x2741;</span><span>Fan</span></a>
+    <a class="sb-item" data-sec="usb"><span class="sb-icon">&#x2B13;</span><span>USB</span></a>
+    <a class="sb-item" data-sec="disk2"><span class="sb-icon">&#x2580;</span><span>Disk 2</span></a>
+    <a class="sb-item" data-sec="samba"><span class="sb-icon">&#x21C4;</span><span>Shares</span></a>
+    <a class="sb-item" data-sec="transmission"><span class="sb-icon">&#x21E9;</span><span>Downloads</span></a>
+    <a class="sb-item" data-sec="dlna"><span class="sb-icon">&#x266B;</span><span>DLNA</span></a>
+    <a class="sb-item" data-sec="aria2"><span class="sb-icon">&#x2913;</span><span>aria2</span></a>
+    <a class="sb-item" data-sec="ssh"><span class="sb-icon">&#x2756;</span><span>SSH</span></a>
+    <a class="sb-item" data-sec="web"><span class="sb-icon">&#x2616;</span><span>Web</span></a>
+    <a class="sb-item" data-sec="dev" style="margin-top:12px;border-top:1px solid #1e293b;padding-top:12px"><span class="sb-icon">&#x2318;</span><span>Development</span></a>
+    <a class="sb-item" data-sec="manuals"><span class="sb-icon">&#x2630;</span><span>Manuals</span></a>
+  </div>
+  <div class="sb-ver">v1.0 &middot; OX810SE</div>
+</nav>
+
+<div class="main">
+
+<!-- ============== GENERAL ============== -->
+<div class="section active" id="sec-general">
+  <div class="sec-title">General<span class="sec-cursor"></span></div>
+  <div class="sec-desc">System-wide settings for the EtrayZ NAS</div>
+
+  <div class="panel">
+    <div class="panel-title">Timezone</div>
+    <div class="field">
+      <select id="timezone">
+        <option value="Europe/Warsaw">Europe/Warsaw</option>
+        <option value="Europe/London">Europe/London</option>
+        <option value="Europe/Berlin">Europe/Berlin</option>
+        <option value="Europe/Paris">Europe/Paris</option>
+        <option value="Europe/Amsterdam">Europe/Amsterdam</option>
+        <option value="Europe/Athens">Europe/Athens</option>
+        <option value="Europe/Belgrade">Europe/Belgrade</option>
+        <option value="Europe/Bratislava">Europe/Bratislava</option>
+        <option value="Europe/Brussels">Europe/Brussels</option>
+        <option value="Europe/Bucharest">Europe/Bucharest</option>
+        <option value="Europe/Budapest">Europe/Budapest</option>
+        <option value="Europe/Copenhagen">Europe/Copenhagen</option>
+        <option value="Europe/Dublin">Europe/Dublin</option>
+        <option value="Europe/Helsinki">Europe/Helsinki</option>
+        <option value="Europe/Istanbul">Europe/Istanbul</option>
+        <option value="Europe/Kiev">Europe/Kiev</option>
+        <option value="Europe/Lisbon">Europe/Lisbon</option>
+        <option value="Europe/Ljubljana">Europe/Ljubljana</option>
+        <option value="Europe/Luxembourg">Europe/Luxembourg</option>
+        <option value="Europe/Madrid">Europe/Madrid</option>
+        <option value="Europe/Minsk">Europe/Minsk</option>
+        <option value="Europe/Moscow">Europe/Moscow</option>
+        <option value="Europe/Oslo">Europe/Oslo</option>
+        <option value="Europe/Prague">Europe/Prague</option>
+        <option value="Europe/Riga">Europe/Riga</option>
+        <option value="Europe/Rome">Europe/Rome</option>
+        <option value="Europe/Sofia">Europe/Sofia</option>
+        <option value="Europe/Stockholm">Europe/Stockholm</option>
+        <option value="Europe/Tallinn">Europe/Tallinn</option>
+        <option value="Europe/Vienna">Europe/Vienna</option>
+        <option value="Europe/Vilnius">Europe/Vilnius</option>
+        <option value="Europe/Zagreb">Europe/Zagreb</option>
+        <option value="Europe/Zurich">Europe/Zurich</option>
+        <option value="Etc/UTC">UTC</option>
+        <option value="US/Eastern">US/Eastern</option>
+        <option value="US/Central">US/Central</option>
+        <option value="US/Pacific">US/Pacific</option>
+        <option value="Asia/Tokyo">Asia/Tokyo</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Dashboard Security</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Require password to access dashboard</span>
+        <label class="toggle"><input type="checkbox" id="dashboard_auth"><span class="slider"></span></label>
+      </div>
+      <div class="field-hint">Uses same credentials as shell login (sysadmin)</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Buzzer</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Beep at startup</span>
+        <label class="toggle"><input type="checkbox" id="beep_startup"><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field" id="beep-pattern-row">
+      <div class="field-row">
+        <span class="field-label">Startup sound</span>
+        <div class="input-row">
+          <select id="beep_pattern" class="input-md">
+            <option value="single">Single beep</option>
+            <option value="double">Double beep</option>
+            <option value="triple">Triple beep</option>
+            <option value="long">Long beep</option>
+            <option value="sos">SOS</option>
+            <option value="startup">Ascending burst</option>
+            <option value="r2d2">R2-D2 chirps</option>
+            <option value="imperial">Imperial March</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="testBuzzer()">&#x266B; Test</button>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Beep when torrent completes</span>
+        <label class="toggle"><input type="checkbox" id="beep_torrent"><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== FAN ============== -->
+<div class="section" id="sec-fan">
+  <div class="sec-title">Fan Control<span class="sec-cursor"></span></div>
+  <div class="sec-desc">Manage the 40mm cooling fan</div>
+
+  <div class="panel">
+    <div class="panel-title">Live Status</div>
+    <div class="status-row">
+      <span class="status-dot on" id="fan-dot"></span>
+      <span class="status-label">Fan RPM</span>
+      <span class="status-val" id="fan-rpm">--</span>
+    </div>
+    <div class="status-row">
+      <span class="status-dot on"></span>
+      <span class="status-label">HDD Temperature</span>
+      <span class="status-val" id="fan-temp">--&deg;C</span>
+    </div>
+    <div class="status-row">
+      <span class="status-dot on"></span>
+      <span class="status-label">Speed ratio</span>
+      <span class="status-val" id="fan-cur">--</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Mode</div>
+    <div class="field">
+      <select id="fan_mode">
+        <option value="auto">Auto (kernel thermal management)</option>
+        <option value="manual">Manual (fixed speed)</option>
+      </select>
+    </div>
+    <div class="field" id="fan-speed-row" style="display:none;margin-top:14px">
+      <div class="field-label">Speed ratio: <strong id="fan-speed-display">6</strong> <span style="color:#3a4a5a">(lower = faster)</span></div>
+      <input type="range" id="fan_speed" min="1" max="10" value="6">
+    </div>
+  </div>
+</div>
+
+<!-- ============== USB ============== -->
+<div class="section" id="sec-usb">
+  <div class="sec-title">USB &amp; Storage<span class="sec-cursor"></span></div>
+  <div class="sec-desc">USB port, auto-mount, and copy button</div>
+
+  <div class="panel">
+    <div class="panel-title">USB Port <span class="badge badge-on" id="usb-badge">ON</span></div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Enable USB port</span>
+        <label class="toggle"><input type="checkbox" id="usb_enabled" checked><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Auto-mount USB drives</span>
+        <label class="toggle"><input type="checkbox" id="usb_automount" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Connected Device</div>
+    <div class="status-row">
+      <span class="status-dot off" id="usb-dev-dot"></span>
+      <span class="status-label" id="usb-dev-label">No USB device</span>
+    </div>
+    <div class="status-row" id="usb-mount-row" style="display:none">
+      <span class="status-label">Mounted at:</span>
+      <span class="status-val" id="usb-mount-path">--</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-ghost btn-sm" id="btn-usb-mount" onclick="usbAction('mount')">Mount</button>
+      <button class="btn btn-ghost btn-sm" id="btn-usb-unmount" onclick="usbAction('unmount')">Unmount</button>
+      <button class="btn btn-ghost btn-sm" id="btn-usb-copy" onclick="usbAction('copy')">&#x2398; Copy to NAS</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Copy Button</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Enable front panel USB copy button</span>
+        <label class="toggle"><input type="checkbox" id="usbcopy_enabled" checked><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Copy target directory</div>
+      <input type="text" id="usbcopy_target" value="/home/public/usb-import">
+    </div>
+  </div>
+</div>
+
+<!-- ============== DISK 2 ============== -->
+<div class="section" id="sec-disk2">
+  <div class="sec-title">Second Disk<span class="sec-cursor"></span></div>
+  <div class="sec-desc">SATA bay 2 — auto-detect, format, and share</div>
+
+  <div class="panel">
+    <div class="panel-title">Detection <span class="badge badge-off" id="disk2-badge">NOT DETECTED</span></div>
+    <div class="status-row">
+      <span class="status-dot off" id="disk2-det-dot"></span>
+      <span class="status-label" id="disk2-det-label">No disk in bay 2</span>
+    </div>
+    <div id="disk2-info-rows" style="display:none">
+      <div class="status-row">
+        <span class="status-label">Device</span>
+        <span class="status-val" id="disk2-dev">--</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Filesystem</span>
+        <span class="status-val" id="disk2-fstype">--</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Size</span>
+        <span class="status-val" id="disk2-size">--</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Mounted at</span>
+        <span class="status-val" id="disk2-mounted">--</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-ghost btn-sm" onclick="disk2Action('mount')">Mount</button>
+      <button class="btn btn-ghost btn-sm" onclick="disk2Action('unmount')">Unmount</button>
+      <button class="btn btn-danger btn-sm" onclick="disk2Format()">Format as XFS</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Auto-Detection</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Enable disk 2 auto-detection at boot</span>
+        <label class="toggle"><input type="checkbox" id="disk2_enabled" checked><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Auto-format new/blank disks</span>
+        <label class="toggle"><input type="checkbox" id="disk2_format_new" checked><span class="slider"></span></label>
+      </div>
+      <div class="field-hint">If enabled, a new unformatted disk will be automatically formatted as XFS on boot</div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Mount point</div>
+      <input type="text" id="disk2_mount" value="/home2">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Samba Share</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Share disk 2 on network</span>
+        <label class="toggle"><input type="checkbox" id="disk2_share_enabled" checked><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Share name</div>
+      <input type="text" id="disk2_share_name" value="storage" class="input-md">
+      <div class="field-hint">Accessible at smb://etrayz/storage</div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Guest access</span>
+        <label class="toggle"><input type="checkbox" id="disk2_share_guest" checked><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Read-only</span>
+        <label class="toggle"><input type="checkbox" id="disk2_share_readonly"><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SAMBA ============== -->
+<div class="section" id="sec-samba">
+  <div class="sec-title">File Sharing<span class="sec-cursor"></span></div>
+  <div class="sec-desc">Samba/CIFS network shares</div>
+
+  <div class="panel">
+    <div class="panel-title">Samba <span class="badge badge-on" id="smb-badge">RUNNING</span></div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Workgroup</div>
+      <input type="text" id="samba_workgroup" value="WORKGROUP" class="input-md">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Shares</div>
+
+    <div class="share-card">
+      <div class="share-header">
+        <span class="share-name">home</span>
+        <label class="toggle"><input type="checkbox" id="samba_home_enabled" checked><span class="slider"></span></label>
+      </div>
+      <div class="share-fields">
+        <div class="field"><div class="field-label">Path</div><input type="text" id="samba_home_path" value="/home"></div>
+        <div class="field">&nbsp;</div>
+        <div class="field"><div class="field-row"><span class="field-label">Guest access</span><label class="toggle"><input type="checkbox" id="samba_home_guest"><span class="slider"></span></label></div></div>
+        <div class="field"><div class="field-row"><span class="field-label">Read-only</span><label class="toggle"><input type="checkbox" id="samba_home_readonly"><span class="slider"></span></label></div></div>
+      </div>
+    </div>
+
+    <div class="share-card">
+      <div class="share-header">
+        <span class="share-name">public</span>
+        <label class="toggle"><input type="checkbox" id="samba_public_enabled" checked><span class="slider"></span></label>
+      </div>
+      <div class="share-fields">
+        <div class="field"><div class="field-label">Path</div><input type="text" id="samba_public_path" value="/home/public"></div>
+        <div class="field">&nbsp;</div>
+        <div class="field"><div class="field-row"><span class="field-label">Guest access</span><label class="toggle"><input type="checkbox" id="samba_public_guest" checked><span class="slider"></span></label></div></div>
+        <div class="field"><div class="field-row"><span class="field-label">Read-only</span><label class="toggle"><input type="checkbox" id="samba_public_readonly"><span class="slider"></span></label></div></div>
+      </div>
+    </div>
+
+    <div class="share-card">
+      <div class="share-header">
+        <span class="share-name">downloads</span>
+        <label class="toggle"><input type="checkbox" id="samba_downloads_enabled" checked><span class="slider"></span></label>
+      </div>
+      <div class="share-fields">
+        <div class="field"><div class="field-label">Path</div><input type="text" id="samba_downloads_path" value="/home/downloads/complete"></div>
+        <div class="field">&nbsp;</div>
+        <div class="field"><div class="field-row"><span class="field-label">Guest access</span><label class="toggle"><input type="checkbox" id="samba_downloads_guest" checked><span class="slider"></span></label></div></div>
+        <div class="field"><div class="field-row"><span class="field-label">Read-only</span><label class="toggle"><input type="checkbox" id="samba_downloads_readonly" checked><span class="slider"></span></label></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== TRANSMISSION ============== -->
+<div class="section" id="sec-transmission">
+  <div class="sec-title">Downloads<span class="sec-cursor"></span></div>
+  <div class="sec-desc">Transmission BitTorrent client</div>
+
+  <div class="panel">
+    <div class="panel-title">Service <span class="badge badge-on" id="trans-badge">RUNNING</span></div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Enable Transmission</span>
+        <label class="toggle"><input type="checkbox" id="trans_enabled" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Directories</div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Download directory</div>
+      <input type="text" id="trans_download_dir" value="/home/downloads/complete">
+    </div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Incomplete directory</div>
+      <input type="text" id="trans_incomplete_dir" value="/home/downloads/incomplete">
+    </div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Watch directory (auto-add .torrent files)</div>
+      <input type="text" id="trans_watch_dir" value="/home/downloads/watch">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Limits</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Upload limit</span>
+        <div class="input-row"><input type="number" id="trans_speed_up" value="500" class="input-sm"><span class="input-suffix">KB/s (0=off)</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Download limit</span>
+        <div class="input-row"><input type="number" id="trans_speed_down" value="0" class="input-sm"><span class="input-suffix">KB/s (0=off)</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Seed ratio limit</span>
+        <div class="input-row"><input type="number" id="trans_ratio" value="2.0" step="0.1" class="input-sm"><span class="input-suffix">x</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Network</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Peer port</span>
+        <input type="number" id="trans_peer_port" value="51413" class="input-sm">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">RPC whitelist (web UI access)</div>
+      <input type="text" id="trans_rpc_whitelist" value="192.168.*.*">
+      <div class="field-hint">Use wildcards. 127.0.0.1 is always allowed.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== DLNA ============== -->
+<div class="section" id="sec-dlna">
+  <div class="sec-title">Media Server<span class="sec-cursor"></span></div>
+  <div class="sec-desc">MiniDLNA / UPnP media streaming</div>
+
+  <div class="panel">
+    <div class="panel-title">Service <span class="badge badge-on" id="dlna-badge">RUNNING</span></div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Enable DLNA server</span>
+        <label class="toggle"><input type="checkbox" id="dlna_enabled" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Configuration</div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Friendly name (shown on TVs/devices)</div>
+      <input type="text" id="dlna_name" value="EtrayZ NAS">
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">HTTP port</span>
+        <input type="number" id="dlna_port" value="8200" class="input-sm">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Media directory</div>
+      <input type="text" id="dlna_media_dir" value="/home/public">
+      <div class="field-hint">Subdirectories Music/, Videos/, Pictures/ are auto-detected</div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Watch for new files (inotify)</span>
+        <label class="toggle"><input type="checkbox" id="dlna_inotify" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Database</div>
+    <div class="field">
+      <button class="btn btn-warn btn-sm" onclick="dlnaRescan()">Force Rescan</button>
+      <div class="field-hint" style="margin-top:8px">Rebuild the media database. May take a while on large libraries.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== ARIA2 ============== -->
+<div class="section" id="sec-aria2">
+  <div class="sec-title">aria2 Downloads<span class="sec-cursor"></span></div>
+  <div class="sec-desc">Multi-protocol download manager (HTTP/FTP/BitTorrent/Magnet)</div>
+
+  <div class="panel">
+    <div class="panel-title">Service <span class="badge badge-on" id="aria2-badge">RUNNING</span></div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Enable aria2</span>
+        <label class="toggle"><input type="checkbox" id="aria2_enabled" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Directories</div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Download directory</div>
+      <input type="text" id="aria2_download_dir" value="/home/downloads/complete">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Limits</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Max concurrent downloads</span>
+        <input type="number" id="aria2_max_concurrent" value="3" class="input-sm" min="1" max="10">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Max connections per server</span>
+        <input type="number" id="aria2_max_conn" value="4" class="input-sm" min="1" max="16">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Upload limit</span>
+        <div class="input-row"><input type="text" id="aria2_upload_limit" value="100K" class="input-sm"><span class="input-suffix">(0=off, e.g. 100K, 1M)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Network</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">XML-RPC port</span>
+        <input type="number" id="aria2_rpc_port" value="6800" class="input-sm">
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Premium Accounts</div>
+    <div class="field-hint" style="margin-bottom:12px">Manage login credentials for file hosting services. These are available in the Download Manager when adding URLs.</div>
+    <div id="accounts-list"></div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" onclick="addAccount()">+ Add Account</button>
+      <button class="btn btn-sm" onclick="saveAccounts()" id="btn-save-accounts">Save Accounts</button>
+      <span id="accounts-status" style="color:#00ff88;font-size:11px;line-height:28px;display:none"></span>
+    </div>
+    <div class="field-hint" style="margin-top:10px">
+      <b>How to use cookies:</b> Install a cookie export extension (Firefox: "cookies.txt", Chrome: "Get cookies.txt LOCALLY"),
+      log in to the hoster site, export cookies in Netscape format, paste below.
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Web UI</div>
+    <div class="field">
+      <a href="/cgi-bin/aria2-ui.sh" class="btn btn-primary btn-sm" style="text-decoration:none">Open Download Manager</a>
+      <div class="field-hint" style="margin-top:8px">Add and manage downloads from the web interface</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SSH ============== -->
+<div class="section" id="sec-ssh">
+  <div class="sec-title">Remote Access<span class="sec-cursor"></span></div>
+  <div class="sec-desc">OpenSSH server configuration</div>
+
+  <div class="panel">
+    <div class="panel-title">SSH Server <span class="badge badge-on" id="ssh-badge">RUNNING</span></div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Port</span>
+        <input type="number" id="ssh_port" value="22" class="input-sm">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Allow root login</span>
+        <label class="toggle"><input type="checkbox" id="ssh_root_login" checked><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Allow password authentication</span>
+        <label class="toggle"><input type="checkbox" id="ssh_password_auth" checked><span class="slider"></span></label>
+      </div>
+      <div class="field-hint">If disabled, only key-based authentication will work</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Authorized Keys</div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Public keys for sysadmin (one per line)</div>
+      <textarea id="ssh_keys" placeholder="ssh-rsa AAAA... user@host"></textarea>
+      <div class="field-hint">Paste your public key (id_rsa.pub) to enable key-based login</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Connection Info</div>
+    <div class="status-row">
+      <span class="status-label">Connect from modern system:</span>
+    </div>
+    <div style="background:#0a0e17;border:1px solid #1e293b;border-radius:4px;padding:10px;font-size:11px;color:#00ff88;word-break:break-all;margin-top:6px">
+      ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa sysadmin@etrayz
+    </div>
+  </div>
+</div>
+
+<!-- ============== WEB ============== -->
+<div class="section" id="sec-web">
+  <div class="sec-title">Web Server<span class="sec-cursor"></span></div>
+  <div class="sec-desc">lighttpd configuration</div>
+
+  <div class="panel">
+    <div class="panel-title">Ports</div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Dashboard port</span>
+        <input type="number" id="dashboard_port" value="70" class="input-sm">
+      </div>
+      <div class="field-hint">This settings page and the main dashboard</div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Personal website port</span>
+        <input type="number" id="website_port" value="80" class="input-sm">
+      </div>
+      <div class="field-hint">Your personal landing page at http://etrayz/</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Personal Website</div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:6px">Website title</div>
+      <input type="text" id="website_title" value="My EtrayZ">
+    </div>
+    <div class="field-hint" style="margin-top:8px">Edit <code>/var/www-site/index.html</code> to customize your website</div>
+  </div>
+</div>
+
+<!-- ============== DEVELOPMENT ============== -->
+<div class="section" id="sec-dev">
+  <div class="sec-title">Development<span class="sec-cursor"></span></div>
+  <div class="sec-desc">Development tools, compilers, and scripting languages</div>
+
+  <div class="panel">
+    <div class="panel-title">System Toolchain</div>
+    <div class="field">
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">Native GCC</span>
+        <span class="status-val" id="dev-gcc">--</span>
+      </div>
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">GNU Make</span>
+        <span class="status-val" id="dev-make">--</span>
+      </div>
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">EGLIBC</span>
+        <span class="status-val" id="dev-glibc">--</span>
+      </div>
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">Kernel</span>
+        <span class="status-val" id="dev-kernel">--</span>
+      </div>
+    </div>
+    <div class="field-hint">Native ARM compiler installed on NAS (GCC 4.4.5, Debian Squeeze)</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Scripting Languages</div>
+    <div class="field">
+      <div class="status-row">
+        <div class="status-dot" id="dev-php-dot"></div>
+        <span class="status-label">PHP</span>
+        <span class="status-val" id="dev-php">--</span>
+      </div>
+      <div class="status-row">
+        <div class="status-dot" id="dev-python-dot"></div>
+        <span class="status-label">Python</span>
+        <span class="status-val" id="dev-python">--</span>
+      </div>
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">Shell (dash/bash)</span>
+        <span class="status-val" id="dev-shell">--</span>
+      </div>
+    </div>
+    <div class="field-hint">PHP 5.3 CGI and Python 2.6 available for web and scripting tasks</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Database</div>
+    <div class="field">
+      <div class="status-row">
+        <div class="status-dot" id="dev-sqlite-dot"></div>
+        <span class="status-label">SQLite</span>
+        <span class="status-val" id="dev-sqlite">--</span>
+      </div>
+    </div>
+    <div class="field-hint">Lightweight embedded database, no server required</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Dropbear SSH <span class="badge badge-off" id="dev-dropbear-badge">--</span></div>
+    <div class="field">
+      <div class="status-row">
+        <div class="status-dot" id="dev-dropbear-dot"></div>
+        <span class="status-label">Dropbear</span>
+        <span class="status-val" id="dev-dropbear">--</span>
+      </div>
+    </div>
+    <div class="field-hint">Lightweight SSH server (~110KB vs OpenSSH ~1MB). Can replace OpenSSH on port 22.</div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="devAction('dropbear_start')">Start</button>
+      <button class="btn btn-ghost btn-sm" onclick="devAction('dropbear_stop')">Stop</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Cross-Compilation Toolchain</div>
+    <div class="field">
+      <div class="field-label" style="margin-bottom:8px">Docker-based ARM cross-compiler for building on x86_64 host</div>
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">GCC 4.2.4 (Gentoo native toolchain from original firmware)</span>
+      </div>
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">QEMU user-mode emulation (ARM on x86_64)</span>
+      </div>
+      <div class="status-row">
+        <div class="status-dot on"></div>
+        <span class="status-label">Kernel 2.6.24.4 headers for module builds</span>
+      </div>
+    </div>
+    <div class="field-hint">Use <code>./toolchain/run.sh</code> to launch container. Builds kernel modules, NOT user-space (glibc mismatch).</div>
+  </div>
+</div>
+
+<!-- ============== MANUALS ============== -->
+<div class="section" id="sec-manuals">
+  <div class="sec-title">Service Manuals<span class="sec-cursor"></span></div>
+  <div class="sec-desc">Detailed shell configuration guides for all NAS services</div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-ssh')">
+    <div class="panel-title">&#x2756; SSH — OpenSSH Server</div>
+    <div class="field-hint">Remote shell access, key management, port forwarding</div>
+  </div>
+  <div class="manual-page" id="m-ssh" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>SSH — OpenSSH Server</h3>
+<p><b>Config file:</b> <code>/etc/ssh/sshd_config</code></p>
+
+<pre>
+# Connect from a modern system (SSH key algorithms required for old OpenSSH 5.x):
+ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa sysadmin@192.168.1.234
+
+# Add to your ~/.ssh/config for convenience:
+Host etrayz
+    HostName 192.168.1.234
+    User sysadmin
+    HostKeyAlgorithms +ssh-rsa
+    PubkeyAcceptedAlgorithms +ssh-rsa
+
+# Change SSH port:
+sudo sed -i 's/^Port .*/Port 2222/' /etc/ssh/sshd_config
+sudo /etc/init.d/ssh reload
+
+# Disable root login:
+sudo sed -i 's/^PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo /etc/init.d/ssh reload
+
+# Add SSH key (from your PC):
+ssh-copy-id -o HostKeyAlgorithms=+ssh-rsa sysadmin@192.168.1.234
+# Or manually:
+cat ~/.ssh/id_rsa.pub | ssh sysadmin@etrayz 'cat >> ~/.ssh/authorized_keys'
+
+# Disable password auth (key-only):
+sudo sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo /etc/init.d/ssh reload
+
+# SCP file transfer:
+scp -o HostKeyAlgorithms=+ssh-rsa file.txt sysadmin@192.168.1.234:/home/public/
+
+# Port forwarding (access NAS web from remote):
+ssh -L 8070:localhost:70 sysadmin@etrayz
+# Then open http://localhost:8070 in browser
+</pre>
+    </div></div>
+  </div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-samba')">
+    <div class="panel-title">&#x21C4; Samba — Network File Sharing</div>
+    <div class="field-hint">SMBv1 shares, user management, access control</div>
+  </div>
+  <div class="manual-page" id="m-samba" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>Samba — Network File Sharing (SMBv1)</h3>
+<p><b>Config file:</b> <code>/etc/samba/smb.conf</code></p>
+<p><b>Note:</b> Samba 3.x only supports SMBv1. Modern clients need configuration.</p>
+
+<pre>
+# Test connection from Linux:
+smbclient -L //192.168.1.234 --option='client min protocol=NT1' -N
+
+# Mount a share on Linux:
+sudo mount -t cifs //192.168.1.234/public /mnt/nas \
+  -o vers=1.0,guest,uid=$(id -u),gid=$(id -g)
+
+# Permanent mount (add to /etc/fstab):
+//192.168.1.234/home /mnt/nas-home cifs vers=1.0,user=sysadmin,pass=etrayz,uid=1000 0 0
+
+# Linux client config (~/.smb/smb.conf or /etc/samba/smb.conf):
+[global]
+   client min protocol = NT1
+
+# Windows 10/11 — enable SMBv1:
+# Control Panel → Programs → Turn Windows features on/off
+# → SMB 1.0/CIFS File Sharing Support → SMB 1.0 Client
+
+# Add a new share on NAS:
+sudo nano /etc/samba/smb.conf
+# Add:
+[media]
+   path = /home/public/Videos
+   browseable = yes
+   writable = yes
+   guest ok = yes
+   force user = sysadmin
+
+# Reload Samba:
+sudo /etc/init.d/samba reload
+
+# Change sysadmin Samba password:
+sudo smbpasswd -a sysadmin
+
+# Check connected clients:
+smbstatus
+
+# List shares:
+smbclient -L localhost -N
+</pre>
+    </div></div>
+  </div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-transmission')">
+    <div class="panel-title">&#x21E9; Transmission — BitTorrent Client</div>
+    <div class="field-hint">Download management, speed limits, remote access</div>
+  </div>
+  <div class="manual-page" id="m-transmission" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>Transmission — BitTorrent Client</h3>
+<p><b>Config file:</b> <code>/etc/transmission-daemon/settings.json</code> (edit while stopped!)</p>
+<p><b>Web UI:</b> <code>http://192.168.1.234:9091</code></p>
+
+<pre>
+# IMPORTANT: Stop transmission before editing config!
+sudo /etc/init.d/transmission-daemon stop
+
+# Edit settings:
+sudo nano /etc/transmission-daemon/settings.json
+
+# Key settings:
+#   "download-dir": "/home/downloads/complete"
+#   "incomplete-dir": "/home/downloads/incomplete"
+#   "speed-limit-up": 500          (KB/s)
+#   "speed-limit-up-enabled": true
+#   "speed-limit-down": 0          (0 = unlimited)
+#   "ratio-limit": 2.0
+#   "peer-port": 51413
+#   "rpc-whitelist": "127.0.0.1,192.168.*.*"
+
+# Start after editing:
+sudo /etc/init.d/transmission-daemon start
+
+# Add torrent from CLI:
+transmission-remote -a "magnet:?xt=urn:..."
+transmission-remote -a /path/to/file.torrent
+
+# List active torrents:
+transmission-remote -l
+
+# Pause all torrents:
+transmission-remote -t all -S
+
+# Resume all:
+transmission-remote -t all -s
+
+# Remove completed (keep files):
+transmission-remote -t 1 -r
+
+# Watch directory (auto-add .torrent files):
+# Place .torrent files in /home/downloads/watch/
+
+# Logs:
+tail -f /var/log/transmission-daemon/transmission-daemon.log
+</pre>
+    </div></div>
+  </div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-aria2')">
+    <div class="panel-title">&#x2913; aria2 — Download Manager</div>
+    <div class="field-hint">HTTP/FTP/BitTorrent/Magnet downloads, XML-RPC API</div>
+  </div>
+  <div class="manual-page" id="m-aria2" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>aria2 — Multi-Protocol Download Manager</h3>
+<p><b>Config file:</b> <code>/etc/aria2/aria2.conf</code></p>
+<p><b>Session file:</b> <code>/etc/aria2/aria2.session</code> (active downloads persist across restarts)</p>
+<p><b>Web UI:</b> <code>http://192.168.1.234:70/cgi-bin/aria2-ui.sh</code></p>
+<p><b>Protocols:</b> HTTP, HTTPS, FTP, BitTorrent, Magnet links, Metalink</p>
+
+<h4>Basic Downloads</h4>
+<pre>
+# Download a file:
+aria2c "http://example.com/file.zip"
+
+# Download with multiple connections (faster):
+aria2c -x 4 -s 4 "http://example.com/largefile.iso"
+
+# Download magnet link:
+aria2c "magnet:?xt=urn:btih:..."
+
+# Download from text file (one URL per line):
+aria2c -i urls.txt
+</pre>
+
+<h4>Premium File Hosting (Uploaded.net, 1fichier, etc.)</h4>
+<p>aria2 supports HTTPS, HTTP authentication, cookies, and custom headers — everything needed
+to download from premium file hosting services. Since these sites use browser-based login,
+the easiest method is to export your login cookies:</p>
+
+<pre>
+# Step-by-step: Download from premium file hosters
+#
+# 1. Install a cookie export extension in your browser:
+#    - Firefox: "Cookie Quick Manager" or "cookies.txt"
+#    - Chrome:  "Get cookies.txt LOCALLY"
+#
+# 2. Log in to the file hosting site (e.g. uploaded.net,
+#    1fichier.com, rapidgator.net, etc.)
+#
+# 3. Export cookies to a text file (Netscape/wget format).
+#    The file looks like this:
+#    .uploaded.net  TRUE  /  TRUE  0  login  myuser
+#    .uploaded.net  TRUE  /  TRUE  0  auth   a1b2c3d4e5
+#
+# 4. In the aria2 Web UI, click "Authentication &amp; options":
+#    - Paste the cookie file content into the Cookies field
+#    - Paste the download link into the URL field
+#    - Click "+ Add"
+#
+# Or from the command line:
+aria2c --load-cookies=cookies.txt "https://uploaded.net/file/abc123"
+</pre>
+
+<h4>HTTP / FTP Authentication</h4>
+<pre>
+# For sites that use HTTP Basic/Digest auth:
+aria2c --http-user=mylogin --http-passwd=mypass \
+  "https://example.com/protected/file.zip"
+
+# FTP login:
+aria2c --ftp-user=mylogin --ftp-passwd=mypass \
+  "ftp://ftp.example.com/pub/file.tar.gz"
+
+# Custom referer (some hosters check this):
+aria2c --referer="https://filehost.com/download-page" \
+  "https://filehost.com/dl/abc123/file.zip"
+
+# Custom headers:
+aria2c --header="Authorization: Bearer token123" \
+  "https://api.example.com/files/download"
+
+# All options combined:
+aria2c --http-user=me --http-passwd=secret \
+  --referer="https://host.com/page" \
+  --load-cookies=cookies.txt \
+  -x 4 -s 4 -o "output-name.zip" \
+  "https://host.com/download/abc123"
+</pre>
+
+<h4>XML-RPC API (remote control)</h4>
+<pre>
+# Add download via XML-RPC (from another machine):
+curl -H 'Content-Type: text/xml' -d '&lt;?xml version="1.0"?&gt;
+&lt;methodCall&gt;&lt;methodName&gt;aria2.addUri&lt;/methodName&gt;
+&lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;string&gt;http://example.com/file.zip&lt;/string&gt;&lt;/value&gt;&lt;/param&gt;
+&lt;/params&gt;&lt;/methodCall&gt;' http://192.168.1.234:6800/rpc
+
+# Clear completed downloads:
+curl -H 'Content-Type: text/xml' -d '&lt;?xml version="1.0"?&gt;
+&lt;methodCall&gt;&lt;methodName&gt;aria2.purgeDownloadResult&lt;/methodName&gt;
+&lt;params&gt;&lt;/params&gt;&lt;/methodCall&gt;' http://localhost:6800/rpc
+</pre>
+
+<h4>Configuration &amp; Service</h4>
+<pre>
+# Config options (/etc/aria2/aria2.conf):
+#   dir=/home/downloads/complete      Download directory
+#   max-concurrent-downloads=3        Parallel downloads
+#   max-connection-per-server=4       Connections per file
+#   split=4                           Split file into N parts
+#   max-overall-upload-limit=100K     Upload speed cap
+#   continue=true                     Resume partial downloads
+#   seed-ratio=0                      Don't seed torrents (0=disable)
+
+# Restart service:
+sudo /etc/init.d/aria2 restart
+
+# Check logs:
+tail -f /var/log/aria2.log
+</pre>
+    </div></div>
+  </div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-dlna')">
+    <div class="panel-title">&#x266B; MiniDLNA — Media Server</div>
+    <div class="field-hint">UPnP/DLNA streaming to TVs, phones, and media players</div>
+  </div>
+  <div class="manual-page" id="m-dlna" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>MiniDLNA — UPnP/DLNA Media Server</h3>
+<p><b>Config file:</b> <code>/etc/minidlna.conf</code></p>
+<p><b>Database:</b> <code>/var/lib/minidlna/files.db</code></p>
+<p><b>Status page:</b> <code>http://192.168.1.234:8200</code></p>
+
+<pre>
+# Media directories (configured in /etc/minidlna.conf):
+#   media_dir=A,/home/public/Music       Audio files
+#   media_dir=V,/home/public/Videos      Video files
+#   media_dir=P,/home/public/Pictures    Image files
+#   media_dir=/home/public               All media types
+
+# Add media files:
+# Via Samba: Copy to \\etrayz\public\Music, Videos, or Pictures
+# Via SCP:
+scp movie.mp4 sysadmin@192.168.1.234:/home/public/Videos/
+scp -r "Music Album/" sysadmin@192.168.1.234:/home/public/Music/
+
+# Force rescan (after adding many files):
+sudo /etc/init.d/minidlna force-reload
+
+# Full database rebuild:
+sudo /etc/init.d/minidlna stop
+sudo rm /var/lib/minidlna/files.db
+sudo /etc/init.d/minidlna start
+
+# Check status:
+curl http://localhost:8200
+
+# Supported formats:
+# Video: MP4, MKV, AVI, MPEG, WMV, FLV, MOV
+# Audio: MP3, FLAC, OGG, WAV, WMA, AAC
+# Images: JPEG, PNG, GIF, BMP, TIFF
+
+# Clients that can play from DLNA:
+# - VLC (View → Playlist → Local Network → UPnP)
+# - Samsung/LG/Sony Smart TVs (Media/AllShare)
+# - Kodi/XBMC
+# - Windows Media Player (Stream → More streaming options)
+# - BubbleUPnP (Android)
+
+# Inotify (auto-detect new files):
+# Set inotify=yes in config (default). New files appear within ~30s.
+# If inotify stops working on large libraries, increase limit:
+echo 65536 | sudo tee /proc/sys/fs/inotify/max_user_watches
+
+# Logs:
+tail -f /var/log/minidlna.log
+</pre>
+    </div></div>
+  </div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-lighttpd')">
+    <div class="panel-title">&#x2616; lighttpd — Web Server</div>
+    <div class="field-hint">Dashboard, settings UI, CGI scripts, personal website</div>
+  </div>
+  <div class="manual-page" id="m-lighttpd" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>lighttpd — Web Server</h3>
+<p><b>Config:</b> <code>/etc/lighttpd/lighttpd.conf</code></p>
+<p><b>Dashboard:</b> port 70 &mdash; <code>/var/www/</code></p>
+<p><b>Personal site:</b> port 80 &mdash; <code>/var/www-site/</code></p>
+
+<pre>
+# Dual-port config (/etc/lighttpd/conf-enabled/20-etrayz.conf):
+$SERVER["socket"] == ":80" {
+    server.document-root = "/var/www-site"
+    index-file.names = ( "index.html" )
+}
+
+# Edit your personal website:
+sudo nano /var/www-site/index.html
+# Or via Samba: \\etrayz\home → navigate to /var/www-site/
+
+# Add a new CGI script:
+sudo nano /var/www/cgi-bin/myscript.sh
+sudo chmod 755 /var/www/cgi-bin/myscript.sh
+# Access at: http://etrayz:70/cgi-bin/myscript.sh
+
+# CGI script template:
+#!/bin/sh
+echo "Content-Type: text/html"
+echo ""
+echo "&lt;html&gt;&lt;body&gt;Hello from $(hostname)&lt;/body&gt;&lt;/html&gt;"
+
+# Enable directory listing (for a specific path):
+# Add to lighttpd.conf:
+$HTTP["url"] =~ "^/files/" {
+    dir-listing.activate = "enable"
+}
+
+# Check config syntax:
+lighttpd -t -f /etc/lighttpd/lighttpd.conf
+
+# Restart:
+sudo /etc/init.d/lighttpd restart
+
+# Access logs:
+tail -f /var/log/lighttpd/access.log
+tail -f /var/log/lighttpd/error.log
+
+# Web apps on port 70:
+# /                      — Dashboard
+# /settings.html         — Settings UI
+# /cgi-bin/filemgr.sh    — File Manager
+# /cgi-bin/aria2-ui.sh   — Download Manager
+# /cgi-bin/gallery.sh    — Photo Gallery
+# /cgi-bin/monit-proxy.sh — Monit (dark themed)
+# /cgi-bin/monit-logs.sh — System Logs
+</pre>
+    </div></div>
+  </div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-monit')">
+    <div class="panel-title">&#x2665; monit — Process Monitor</div>
+    <div class="field-hint">Service watchdog, auto-restart, resource alerts</div>
+  </div>
+  <div class="manual-page" id="m-monit" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>monit — Process Monitor &amp; Watchdog</h3>
+<p><b>Config file:</b> <code>/etc/monit/monitrc</code> (chmod 600)</p>
+<p><b>Web UI:</b> <code>http://192.168.1.234:70/cgi-bin/monit-proxy.sh</code></p>
+
+<pre>
+# Check all services:
+sudo monit summary
+
+# Start/stop/restart a service via monit:
+sudo monit start transmission
+sudo monit stop minidlna
+sudo monit restart sshd
+
+# Reload monit config:
+sudo monit reload
+
+# View monit log:
+tail -f /var/log/monit.log
+
+# Add a new process to monitor:
+sudo nano /etc/monit/monitrc
+# Add:
+check process myapp with pidfile /var/run/myapp.pid
+    start program = "/etc/init.d/myapp start"
+    stop program  = "/etc/init.d/myapp stop"
+    if failed port 1234 then restart
+    if 3 restarts within 5 cycles then timeout
+
+# Monitor a file:
+check file mylog with path /var/log/myapp.log
+    if size > 100 MB then exec "/usr/bin/logrotate /etc/logrotate.d/myapp"
+
+# Monitor disk space:
+check filesystem data with path /dev/sda3
+    if space usage > 90% then alert
+
+# System resource alerts:
+check system etrayz
+    if loadavg (5min) > 4 then alert
+    if memory usage > 90% then alert
+
+# Monit checks every 60 seconds (configurable):
+set daemon 60
+
+# Currently monitored:
+# sshd, smbd, nmbd, transmission, lighttpd, minidlna, aria2, usbcopy
+# Filesystems: rootfs (/dev/md0), datafs (/dev/sda3)
+# System: load average, memory usage
+</pre>
+    </div></div>
+  </div>
+
+  <div class="panel" style="cursor:pointer" onclick="showManual('m-system')">
+    <div class="panel-title">&#x2699; System Administration</div>
+    <div class="field-hint">Package management, networking, disk tools, cron jobs</div>
+  </div>
+  <div class="manual-page" id="m-system" style="display:none">
+    <div class="panel"><div class="man-content">
+<h3>System Administration</h3>
+
+<pre>
+# === Package Management ===
+sudo apt-get update                   # Refresh package list
+sudo apt-get install package-name     # Install a package
+sudo apt-get remove package-name      # Remove a package
+dpkg -l                               # List installed packages
+dpkg -L package-name                  # List files in a package
+
+# === Disk Management ===
+df -h                                 # Disk usage
+du -sh /home/*                        # Directory sizes
+sudo smartctl -a /dev/sda             # SMART disk health
+sudo xfs_repair /dev/sda3             # Repair XFS (unmount first!)
+sudo hdparm -I /dev/sda               # Disk info
+
+# === Network ===
+ifconfig eth0                         # IP address
+route -n                              # Routing table
+cat /etc/resolv.conf                  # DNS servers
+ping -c 3 google.com                  # Test connectivity
+netstat -tlnp                         # Listening ports
+
+# === Process Management ===
+htop                                  # Interactive process viewer
+ps aux                                # List all processes
+kill PID                              # Stop a process
+sudo /etc/init.d/SERVICE restart      # Restart a service
+
+# === Cron Jobs ===
+crontab -e                            # Edit user cron
+sudo crontab -e                       # Edit root cron
+# Example: backup every night at 2am:
+0 2 * * * rsync -a /home/public/ /home2/backup/
+
+# === Logs ===
+tail -f /var/log/messages             # System log
+tail -f /var/log/auth.log             # Login attempts
+tail -f /var/log/daemon.log           # Service logs
+dmesg                                 # Kernel messages
+
+# === Settings System ===
+# All settings stored in: /etc/etrayz/settings.conf
+# Factory defaults:       /etc/etrayz/defaults.conf
+# Apply all settings:     sudo etrayz-apply all
+# Apply one section:      sudo etrayz-apply samba
+
+# === GPIO (LEDs, Buzzer, Buttons) ===
+# LEDs:
+echo 1 > /sys/gpio/devices/led_sys       # System LED on
+echo 0 > /sys/gpio/devices/led_sata1     # SATA1 LED off
+# Buzzer:
+etrayz-buzzer single                      # Beep patterns: single, double,
+etrayz-buzzer r2d2                        # triple, long, sos, startup, r2d2, imperial
+
+# === Backup ===
+# Backup to second HDD:
+rsync -av --delete /home/ /home2/backup-home/
+# Backup to external USB drive:
+rsync -av /home/public/ /media/usb/backup/
+
+# === User Management ===
+passwd sysadmin                       # Change password
+sudo adduser newuser                  # Add new user
+sudo smbpasswd -a newuser             # Add Samba user
+</pre>
+    </div></div>
+  </div>
+
+</div>
+
+</div><!-- /main -->
+
+<div class="footer-bar">
+  <span class="footer-msg" id="footer-msg">Ready</span>
+  <button class="btn btn-danger btn-sm" onclick="resetDefaults()">Reset Defaults</button>
+  <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save &amp; Apply</button>
+</div>
+
+<script>
+/* --- Navigation --- */
+var items = document.querySelectorAll('.sb-item');
+for (var i = 0; i < items.length; i++) {
+  items[i].addEventListener('click', function() {
+    for (var j = 0; j < items.length; j++) items[j].className = 'sb-item';
+    this.className = 'sb-item active';
+    var secs = document.querySelectorAll('.section');
+    for (var j = 0; j < secs.length; j++) secs[j].className = 'section';
+    document.getElementById('sec-' + this.getAttribute('data-sec')).className = 'section active';
+  });
+}
+
+/* --- Hash-based section navigation (e.g. #sec-aria2) --- */
+function goToHash() {
+  var h = location.hash.replace('#','');
+  if (!h) return;
+  var sec = h.replace('sec-','');
+  var target = document.querySelector('.sb-item[data-sec="' + sec + '"]');
+  if (target) target.click();
+}
+goToHash();
+window.addEventListener('hashchange', goToHash);
+
+/* --- Fan mode toggle --- */
+document.getElementById('fan_mode').addEventListener('change', function() {
+  document.getElementById('fan-speed-row').style.display = this.value === 'manual' ? 'block' : 'none';
+});
+document.getElementById('fan_speed').addEventListener('input', function() {
+  document.getElementById('fan-speed-display').textContent = this.value;
+});
+
+/* --- Load settings --- */
+function loadSettings() {
+  var x = new XMLHttpRequest();
+  x.open('GET', '/cgi-bin/settings.sh', true);
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4 || x.status !== 200) return;
+    try {
+      var d = JSON.parse(x.responseText);
+      // Populate fields
+      setVal('timezone', d.timezone);
+      setChk('dashboard_auth', d.dashboard_auth);
+      setChk('beep_startup', d.beep_startup);
+      setVal('beep_pattern', d.beep_pattern);
+      setChk('beep_torrent', d.beep_torrent);
+      setVal('fan_mode', d.fan_mode);
+      setVal('fan_speed', d.fan_speed);
+      document.getElementById('fan-speed-display').textContent = d.fan_speed;
+      document.getElementById('fan-speed-row').style.display = d.fan_mode === 'manual' ? 'block' : 'none';
+      setChk('usb_enabled', d.usb_enabled);
+      setChk('usb_automount', d.usb_automount);
+      setChk('usbcopy_enabled', d.usbcopy_enabled);
+      setVal('usbcopy_target', d.usbcopy_target);
+      setVal('samba_workgroup', d.samba_workgroup);
+      setChk('samba_home_enabled', d.samba_home_enabled);
+      setVal('samba_home_path', d.samba_home_path);
+      setChk('samba_home_guest', d.samba_home_guest);
+      setChk('samba_home_readonly', d.samba_home_readonly);
+      setChk('samba_public_enabled', d.samba_public_enabled);
+      setVal('samba_public_path', d.samba_public_path);
+      setChk('samba_public_guest', d.samba_public_guest);
+      setChk('samba_public_readonly', d.samba_public_readonly);
+      setChk('samba_downloads_enabled', d.samba_downloads_enabled);
+      setVal('samba_downloads_path', d.samba_downloads_path);
+      setChk('samba_downloads_guest', d.samba_downloads_guest);
+      setChk('samba_downloads_readonly', d.samba_downloads_readonly);
+      setChk('trans_enabled', d.trans_enabled);
+      setVal('trans_download_dir', d.trans_download_dir);
+      setVal('trans_incomplete_dir', d.trans_incomplete_dir);
+      setVal('trans_watch_dir', d.trans_watch_dir);
+      setVal('trans_speed_up', d.trans_speed_up);
+      setVal('trans_speed_down', d.trans_speed_down);
+      setVal('trans_ratio', d.trans_ratio);
+      setVal('trans_peer_port', d.trans_peer_port);
+      setVal('trans_rpc_whitelist', d.trans_rpc_whitelist);
+      setChk('dlna_enabled', d.dlna_enabled);
+      setVal('dlna_name', d.dlna_name);
+      setVal('dlna_port', d.dlna_port);
+      setVal('dlna_media_dir', d.dlna_media_dir);
+      setChk('dlna_inotify', d.dlna_inotify);
+      setChk('aria2_enabled', d.aria2_enabled);
+      setVal('aria2_download_dir', d.aria2_download_dir);
+      setVal('aria2_max_concurrent', d.aria2_max_concurrent);
+      setVal('aria2_max_conn', d.aria2_max_conn);
+      setVal('aria2_upload_limit', d.aria2_upload_limit);
+      setVal('aria2_rpc_port', d.aria2_rpc_port);
+      setVal('ssh_port', d.ssh_port);
+      setChk('ssh_root_login', d.ssh_root_login);
+      setChk('ssh_password_auth', d.ssh_password_auth);
+      if (d.ssh_keys) document.getElementById('ssh_keys').value = d.ssh_keys.replace(/\|/g, '\n');
+      setChk('disk2_enabled', d.disk2_enabled);
+      setChk('disk2_format_new', d.disk2_format_new);
+      setVal('disk2_mount', d.disk2_mount);
+      setChk('disk2_share_enabled', d.disk2_share_enabled);
+      setVal('disk2_share_name', d.disk2_share_name);
+      setChk('disk2_share_guest', d.disk2_share_guest);
+      setChk('disk2_share_readonly', d.disk2_share_readonly);
+      setVal('dashboard_port', d.dashboard_port);
+      setVal('website_port', d.website_port);
+      setVal('website_title', d.website_title);
+
+      // Disk 2 live status
+      updateDisk2Status(d);
+
+      // Development tab
+      updateDevStatus(d);
+
+      // Live status
+      document.getElementById('fan-rpm').textContent = d.fan_rpm || '--';
+      document.getElementById('fan-temp').textContent = (d.fan_temp || '--') + '\u00b0C';
+      document.getElementById('fan-cur').textContent = d.fan_cur || '--';
+
+      // USB status
+      if (d.usb_dev) {
+        document.getElementById('usb-dev-dot').className = 'status-dot on';
+        document.getElementById('usb-dev-label').textContent = '/dev/' + d.usb_dev;
+        if (d.usb_mount) {
+          document.getElementById('usb-mount-row').style.display = 'flex';
+          document.getElementById('usb-mount-path').textContent = d.usb_mount;
+        }
+      } else {
+        document.getElementById('usb-dev-dot').className = 'status-dot off';
+        document.getElementById('usb-dev-label').textContent = 'No USB device';
+        document.getElementById('usb-mount-row').style.display = 'none';
+      }
+      setBadge('usb-badge', d.usb_state === '1');
+      setBadge('trans-badge', d.trans_running === '1');
+      setBadge('smb-badge', d.samba_running === '1');
+      setBadge('ssh-badge', d.ssh_running === '1');
+      setBadge('dlna-badge', d.dlna_running === '1');
+      setBadge('aria2-badge', d.aria2_running === '1');
+    } catch(e) { console.log(e); }
+  };
+  x.send();
+}
+
+function setVal(id, v) { var e = document.getElementById(id); if (e && v !== undefined) e.value = v; }
+function setChk(id, v) { var e = document.getElementById(id); if (e) e.checked = (v === '1' || v === 1 || v === true); }
+function setBadge(id, on) {
+  var e = document.getElementById(id);
+  if (!e) return;
+  e.className = 'badge ' + (on ? 'badge-on' : 'badge-off');
+  e.textContent = on ? (id.match(/usb/) ? 'ON' : 'RUNNING') : (id.match(/usb/) ? 'OFF' : 'STOPPED');
+}
+
+/* --- Refresh live status only (does NOT touch form values) --- */
+function refreshStatus() {
+  var x = new XMLHttpRequest();
+  x.open('GET', '/cgi-bin/settings.sh', true);
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4 || x.status !== 200) return;
+    try {
+      var d = JSON.parse(x.responseText);
+      document.getElementById('fan-rpm').textContent = d.fan_rpm || '--';
+      document.getElementById('fan-temp').textContent = (d.fan_temp || '--') + '\u00b0C';
+      document.getElementById('fan-cur').textContent = d.fan_cur || '--';
+      if (d.usb_dev) {
+        document.getElementById('usb-dev-dot').className = 'status-dot on';
+        document.getElementById('usb-dev-label').textContent = '/dev/' + d.usb_dev;
+        if (d.usb_mount) {
+          document.getElementById('usb-mount-row').style.display = 'flex';
+          document.getElementById('usb-mount-path').textContent = d.usb_mount;
+        }
+      } else {
+        document.getElementById('usb-dev-dot').className = 'status-dot off';
+        document.getElementById('usb-dev-label').textContent = 'No USB device';
+        document.getElementById('usb-mount-row').style.display = 'none';
+      }
+      setBadge('usb-badge', d.usb_state === '1');
+      setBadge('trans-badge', d.trans_running === '1');
+      setBadge('smb-badge', d.samba_running === '1');
+      setBadge('ssh-badge', d.ssh_running === '1');
+      setBadge('dlna-badge', d.dlna_running === '1');
+      setBadge('aria2-badge', d.aria2_running === '1');
+      updateDisk2Status(d);
+      updateDevStatus(d);
+    } catch(e) {}
+  };
+  x.send();
+}
+
+function updateDevStatus(d) {
+  if (d.dev_gcc) document.getElementById('dev-gcc').textContent = d.dev_gcc || '--';
+  if (d.dev_make) document.getElementById('dev-make').textContent = d.dev_make || '--';
+  if (d.dev_glibc) document.getElementById('dev-glibc').textContent = d.dev_glibc || '--';
+  if (d.dev_kernel) document.getElementById('dev-kernel').textContent = d.dev_kernel || '--';
+  var phpDot = document.getElementById('dev-php-dot');
+  var pyDot = document.getElementById('dev-python-dot');
+  var sqlDot = document.getElementById('dev-sqlite-dot');
+  var dbDot = document.getElementById('dev-dropbear-dot');
+  document.getElementById('dev-php').textContent = d.dev_php || 'not installed';
+  phpDot.className = 'status-dot ' + (d.dev_php ? 'on' : 'off');
+  document.getElementById('dev-python').textContent = d.dev_python || 'not installed';
+  pyDot.className = 'status-dot ' + (d.dev_python ? 'on' : 'off');
+  document.getElementById('dev-shell').textContent = 'dash + bash';
+  document.getElementById('dev-sqlite').textContent = d.dev_sqlite || 'not installed';
+  sqlDot.className = 'status-dot ' + (d.dev_sqlite ? 'on' : 'off');
+  document.getElementById('dev-dropbear').textContent = d.dev_dropbear ? 'v' + d.dev_dropbear : 'not installed';
+  dbDot.className = 'status-dot ' + (d.dev_dropbear ? 'on' : 'off');
+  setBadge('dev-dropbear-badge', d.dev_dropbear_running === '1');
+}
+
+function updateDisk2Status(d) {
+  var det = d.disk2_detected === '1';
+  var mounted = d.disk2_mounted && d.disk2_mounted.length > 0;
+  var dot = document.getElementById('disk2-det-dot');
+  var label = document.getElementById('disk2-det-label');
+  var badge = document.getElementById('disk2-badge');
+  var info = document.getElementById('disk2-info-rows');
+
+  if (det) {
+    dot.className = 'status-dot ' + (mounted ? 'on' : 'off');
+    label.textContent = mounted ? 'Disk detected and mounted' : 'Disk detected — not mounted';
+    badge.className = 'badge ' + (mounted ? 'badge-on' : 'badge-off');
+    badge.textContent = mounted ? 'MOUNTED' : 'DETECTED';
+    info.style.display = 'block';
+    document.getElementById('disk2-dev').textContent = '/dev/' + (d.disk2_dev || '--');
+    document.getElementById('disk2-fstype').textContent = d.disk2_fstype || 'none (unformatted)';
+    document.getElementById('disk2-size').textContent = d.disk2_size || '--';
+    document.getElementById('disk2-mounted').textContent = d.disk2_mounted || 'not mounted';
+  } else {
+    dot.className = 'status-dot off';
+    label.textContent = 'No disk in bay 2';
+    badge.className = 'badge badge-off';
+    badge.textContent = 'NOT DETECTED';
+    info.style.display = 'none';
+  }
+}
+
+/* --- Save --- */
+function saveSettings() {
+  var msg = document.getElementById('footer-msg');
+  msg.textContent = 'Saving...';
+  msg.className = 'footer-msg';
+
+  var fields = [
+    'timezone','dashboard_auth','beep_startup','beep_pattern','beep_torrent',
+    'fan_mode','fan_speed',
+    'usb_enabled','usb_automount','usbcopy_enabled','usbcopy_target',
+    'samba_workgroup',
+    'samba_home_enabled','samba_home_path','samba_home_guest','samba_home_readonly',
+    'samba_public_enabled','samba_public_path','samba_public_guest','samba_public_readonly',
+    'samba_downloads_enabled','samba_downloads_path','samba_downloads_guest','samba_downloads_readonly',
+    'trans_enabled','trans_download_dir','trans_incomplete_dir','trans_watch_dir',
+    'trans_speed_up','trans_speed_down','trans_ratio','trans_peer_port','trans_rpc_whitelist',
+    'dlna_enabled','dlna_name','dlna_port','dlna_media_dir','dlna_inotify',
+    'aria2_enabled','aria2_download_dir','aria2_max_concurrent','aria2_max_conn','aria2_upload_limit','aria2_rpc_port',
+    'disk2_enabled','disk2_format_new','disk2_mount',
+    'disk2_share_enabled','disk2_share_name','disk2_share_guest','disk2_share_readonly',
+    'ssh_port','ssh_root_login','ssh_password_auth',
+    'dashboard_port','website_port','website_title'
+  ];
+
+  var data = [];
+  for (var i = 0; i < fields.length; i++) {
+    var el = document.getElementById(fields[i]);
+    if (!el) continue;
+    var v = el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value;
+    data.push(fields[i] + '=' + encodeURIComponent(v));
+  }
+
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    try {
+      var r = JSON.parse(x.responseText);
+      if (r.ok) { msg.textContent = '\u2713 ' + (r.msg || 'Saved'); msg.className = 'footer-msg ok'; }
+      else { msg.textContent = '\u2717 ' + (r.msg || 'Error'); msg.className = 'footer-msg err'; }
+    } catch(e) { msg.textContent = '\u2717 Error'; msg.className = 'footer-msg err'; }
+    // Also save SSH keys separately
+    var keys = document.getElementById('ssh_keys').value.replace(/\n/g, '|');
+    if (keys) {
+      var kx = new XMLHttpRequest();
+      kx.open('POST', '/cgi-bin/settings.sh', true);
+      kx.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      kx.send('action=save_keys&keys=' + encodeURIComponent(keys));
+    }
+    setTimeout(function() { loadSettings(); msg.textContent = 'Ready'; msg.className = 'footer-msg'; }, 3000);
+  };
+  x.send(data.join('&'));
+}
+
+/* --- Reset --- */
+function resetDefaults() {
+  if (!confirm('Reset ALL settings to factory defaults? Services will be restarted.')) return;
+  var msg = document.getElementById('footer-msg');
+  msg.textContent = 'Resetting...';
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    msg.textContent = '\u2713 Reset complete';
+    msg.className = 'footer-msg ok';
+    setTimeout(function() { loadSettings(); msg.textContent = 'Ready'; msg.className = 'footer-msg'; }, 2000);
+  };
+  x.send('action=reset');
+}
+
+/* --- USB actions --- */
+function usbAction(action) {
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    try {
+      var r = JSON.parse(x.responseText);
+      var msg = document.getElementById('footer-msg');
+      msg.textContent = r.msg || action;
+      msg.className = 'footer-msg ' + (r.ok ? 'ok' : 'err');
+      setTimeout(function() { loadSettings(); msg.textContent = 'Ready'; msg.className = 'footer-msg'; }, 2000);
+    } catch(e) {}
+  };
+  x.send('action=usb_' + action);
+}
+
+/* --- Disk 2 actions --- */
+function disk2Action(action) {
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    try {
+      var r = JSON.parse(x.responseText);
+      var msg = document.getElementById('footer-msg');
+      msg.textContent = r.msg || action;
+      msg.className = 'footer-msg ' + (r.ok ? 'ok' : 'err');
+      setTimeout(function() { refreshStatus(); msg.textContent = 'Ready'; msg.className = 'footer-msg'; }, 2000);
+    } catch(e) {}
+  };
+  x.send('action=disk2_' + action);
+}
+
+function disk2Format() {
+  if (!confirm('FORMAT /dev/sdb as XFS?\n\nThis will ERASE ALL DATA on the second disk.\nThis cannot be undone.')) return;
+  if (!confirm('Are you absolutely sure? ALL DATA on bay 2 will be destroyed.')) return;
+  var msg = document.getElementById('footer-msg');
+  msg.textContent = 'Formatting...';
+  msg.className = 'footer-msg';
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    try {
+      var r = JSON.parse(x.responseText);
+      msg.textContent = r.msg || 'Done';
+      msg.className = 'footer-msg ' + (r.ok ? 'ok' : 'err');
+      setTimeout(function() { refreshStatus(); msg.textContent = 'Ready'; msg.className = 'footer-msg'; }, 3000);
+    } catch(e) { msg.textContent = 'Error'; msg.className = 'footer-msg err'; }
+  };
+  x.send('action=disk2_format');
+}
+
+/* --- DLNA rescan --- */
+function dlnaRescan() {
+  if (!confirm('Rescan media library? This may take a while.')) return;
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    var msg = document.getElementById('footer-msg');
+    msg.textContent = '\u2713 DLNA rescan started';
+    msg.className = 'footer-msg ok';
+    setTimeout(function() { refreshStatus(); msg.textContent = 'Ready'; msg.className = 'footer-msg'; }, 3000);
+  };
+  x.send('action=dlna_rescan');
+}
+
+/* --- Test buzzer --- */
+function testBuzzer() {
+  var pattern = document.getElementById('beep_pattern').value;
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.send('action=test_buzzer&pattern=' + pattern);
+}
+
+/* --- Dev actions (dropbear start/stop) --- */
+function devAction(action) {
+  var msg = document.getElementById('footer-msg');
+  msg.textContent = action.replace('_', ' ') + '...';
+  msg.className = 'footer-msg';
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    try {
+      var r = JSON.parse(x.responseText);
+      msg.textContent = r.msg || action;
+      msg.className = 'footer-msg ' + (r.ok ? 'ok' : 'err');
+    } catch(e) { msg.textContent = 'Error'; msg.className = 'footer-msg err'; }
+    setTimeout(function() { refreshStatus(); msg.textContent = 'Ready'; msg.className = 'footer-msg'; }, 2000);
+  };
+  x.send('action=' + action);
+}
+
+/* --- Manual page toggle --- */
+function showManual(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+/* --- Premium Accounts --- */
+var accounts = [];
+
+function renderAccounts() {
+  var c = document.getElementById('accounts-list');
+  if (!c) return;
+  if (accounts.length === 0) {
+    c.innerHTML = '<div style="color:#3a4a5a;font-size:11px;padding:10px 0">No accounts configured. Click "+ Add Account" to add one.</div>';
+    return;
+  }
+  var h = '';
+  for (var i = 0; i < accounts.length; i++) {
+    var a = accounts[i];
+    h += '<div class="acct-row" data-idx="' + i + '">';
+    h += '<button class="acct-remove" onclick="removeAccount(' + i + ')" title="Remove">&times;</button>';
+    h += '<div class="acct-grid">';
+    h += '<div><label>Service name</label><input type="text" value="' + esc(a.service) + '" onchange="accounts[' + i + '].service=this.value" placeholder="e.g. uploaded.net" style="width:100%"></div>';
+    h += '<div><label>Referer URL</label><input type="text" value="' + esc(a.referer) + '" onchange="accounts[' + i + '].referer=this.value" placeholder="https://uploaded.net/" style="width:100%"></div>';
+    h += '<div><label>Username</label><input type="text" value="' + esc(a.user) + '" onchange="accounts[' + i + '].user=this.value" placeholder="username" style="width:100%"></div>';
+    h += '<div><label>Password</label><input type="password" value="' + esc(a.pass) + '" onchange="accounts[' + i + '].pass=this.value" placeholder="password" style="width:100%"></div>';
+    h += '</div>';
+    h += '<div class="acct-full"><label>Cookies <span style="color:#2a3a4a">(Netscape format — export from browser after login)</span></label>';
+    h += '<textarea onchange="accounts[' + i + '].cookies=this.value" placeholder="# Netscape HTTP Cookie File&#10;.example.com&#9;TRUE&#9;/&#9;FALSE&#9;0&#9;session&#9;abc123">' + esc(a.cookies) + '</textarea></div>';
+    h += '</div>';
+  }
+  c.innerHTML = h;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addAccount() {
+  accounts.push({service:'', user:'', pass:'', referer:'', cookies:''});
+  renderAccounts();
+}
+
+function removeAccount(idx) {
+  accounts.splice(idx, 1);
+  renderAccounts();
+}
+
+function loadAccounts() {
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.onreadystatechange = function() {
+    if (x.readyState === 4 && x.status === 200) {
+      try {
+        var d = JSON.parse(x.responseText);
+        if (d.accounts) {
+          accounts = d.accounts;
+          renderAccounts();
+        }
+      } catch(e) {}
+    }
+  };
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.send('action=load_accounts');
+}
+
+function saveAccounts() {
+  var btn = document.getElementById('btn-save-accounts');
+  var st = document.getElementById('accounts-status');
+  btn.disabled = true;
+  var payload = 'action=save_accounts&data=' + encodeURIComponent(JSON.stringify(accounts));
+  var x = new XMLHttpRequest();
+  x.open('POST', '/cgi-bin/settings.sh', true);
+  x.onreadystatechange = function() {
+    if (x.readyState === 4) {
+      btn.disabled = false;
+      try {
+        var d = JSON.parse(x.responseText);
+        st.style.display = 'inline';
+        st.textContent = d.msg || 'Saved';
+        st.style.color = d.ok ? '#00ff88' : '#ff4444';
+        setTimeout(function(){ st.style.display='none'; }, 3000);
+      } catch(e) { st.style.display='inline'; st.textContent='Error'; st.style.color='#ff4444'; }
+    }
+  };
+  x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  x.send(payload);
+}
+
+loadSettings();
+loadAccounts();
+setInterval(refreshStatus, 10000);
+</script>
+</body>
+</html>

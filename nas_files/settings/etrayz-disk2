@@ -1,0 +1,131 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          etrayz-disk2
+# Required-Start:    $local_fs
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Auto-detect and mount second SATA disk
+### END INIT INFO
+
+CONF=/etc/etrayz/settings.conf
+LOG=/var/log/etrayz-disk2.log
+
+log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG"; echo "etrayz-disk2: $*"; }
+
+# Determine which /dev/sdX is the second SATA disk (not USB)
+# SATA disks are detected before USB (oxnassata is built-in, ehci-hcd loaded later)
+# So at boot: sda=bay1, sdb=bay2 (if present). USB gets next letter.
+# After boot with USB plugged in, sdb could be USB if bay2 is empty.
+# We verify by checking the device path in sysfs.
+find_sata2() {
+    # Check sysfs — the block device node exists statically, so we must
+    # verify there's an actual disk behind it via /sys/block/sdb
+    [ -d /sys/block/sdb ] || return 1
+
+    # Check if sdb is on the SATA controller (not USB)
+    DEVPATH=$(readlink -f /sys/block/sdb/device 2>/dev/null)
+    case "$DEVPATH" in
+        */usb*) return 1 ;;  # It's a USB device, not SATA bay 2
+    esac
+
+    return 0
+}
+
+# Find the best device node to mount (partition or whole disk)
+find_dev() {
+    if [ -b /dev/sdb1 ]; then
+        echo /dev/sdb1
+    else
+        echo /dev/sdb
+    fi
+}
+
+do_start() {
+    [ -f "$CONF" ] && . "$CONF"
+    DISK2_ENABLED="${DISK2_ENABLED:-1}"
+    DISK2_MOUNT="${DISK2_MOUNT:-/home2}"
+    DISK2_FORMAT_NEW="${DISK2_FORMAT_NEW:-1}"
+
+    [ "$DISK2_ENABLED" = "1" ] || { log "Disabled in settings"; return; }
+
+    # Check for second SATA disk
+    if ! find_sata2; then
+        log "No second SATA disk detected"
+        return
+    fi
+
+    DEV=$(find_dev)
+    log "Found second disk: $DEV"
+
+    # Already mounted?
+    if mount | grep -q "^$DEV "; then
+        log "$DEV already mounted"
+        return
+    fi
+
+    # Detect filesystem
+    FSTYPE=$(blkid -s TYPE -o value "$DEV" 2>/dev/null)
+
+    # If partition has no FS, try whole disk
+    if [ -z "$FSTYPE" ] && [ "$DEV" = "/dev/sdb1" ]; then
+        FSTYPE=$(blkid -s TYPE -o value /dev/sdb 2>/dev/null)
+        [ -n "$FSTYPE" ] && DEV=/dev/sdb
+    fi
+
+    if [ -z "$FSTYPE" ]; then
+        if [ "$DISK2_FORMAT_NEW" = "1" ]; then
+            log "No filesystem found — formatting $DEV as XFS"
+            # Format whole disk as XFS (no partition table needed)
+            mkfs.xfs -f -L etrayz-data2 /dev/sdb 2>> "$LOG"
+            if [ $? -ne 0 ]; then
+                log "Format FAILED"
+                return
+            fi
+            DEV=/dev/sdb
+            FSTYPE=xfs
+            log "Format complete"
+        else
+            log "No filesystem and auto-format disabled — skipping"
+            return
+        fi
+    fi
+
+    # Mount
+    mkdir -p "$DISK2_MOUNT"
+    if mount -t "$FSTYPE" -o noatime,nodiratime "$DEV" "$DISK2_MOUNT" 2>> "$LOG"; then
+        log "Mounted $DEV ($FSTYPE) at $DISK2_MOUNT"
+        # Ensure sysadmin owns the root of the mount
+        chown sysadmin:sysadmin "$DISK2_MOUNT" 2>/dev/null
+        chmod 775 "$DISK2_MOUNT" 2>/dev/null
+    else
+        log "Mount FAILED: $DEV -> $DISK2_MOUNT"
+    fi
+}
+
+do_stop() {
+    [ -f "$CONF" ] && . "$CONF"
+    DISK2_MOUNT="${DISK2_MOUNT:-/home2}"
+    if mount | grep -q " $DISK2_MOUNT "; then
+        umount "$DISK2_MOUNT" 2>/dev/null && log "Unmounted $DISK2_MOUNT"
+    fi
+}
+
+case "$1" in
+    start)   do_start ;;
+    stop)    do_stop ;;
+    restart) do_stop; do_start ;;
+    status)
+        [ -f "$CONF" ] && . "$CONF"
+        DISK2_MOUNT="${DISK2_MOUNT:-/home2}"
+        if mount | grep -q " $DISK2_MOUNT "; then
+            echo "Disk 2 mounted at $DISK2_MOUNT"
+        elif [ -d /sys/block/sdb ]; then
+            echo "Disk 2 detected but not mounted"
+        else
+            echo "No second disk detected"
+        fi
+        ;;
+    *) echo "Usage: $0 {start|stop|restart|status}"; exit 1 ;;
+esac
+exit 0

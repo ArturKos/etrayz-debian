@@ -1,0 +1,28 @@
+# Source material (kept locally, not in git)
+/etrayz/
+
+# Large binaries — hosted on Google Drive (see README for download links)
+/GoogleDrive/
+
+# Build artifacts
+/build/
+
+# Toolchain build context (large, downloaded separately)
+/toolchain/linux-2.6.24.4.tar.gz
+/toolchain/nas_modules_fw.tar.gz
+/toolchain/hdd.bin
+
+# Editor/OS junk
+.DS_Store
+*.swp
+*~
+
+# Claude Code internal
+/.claude/
+
+# Development notes (contains credentials/IPs — keep local only)
+/SESSION_STATE.md
+/todo.txt
+
+# Old root-level screenshot (superseded by screenshots/ folder)
+/screenshot.png

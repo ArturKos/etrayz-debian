@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EtrayZ NAS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Courier New',monospace;background:#0a0e17;color:#c5cdd9;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.container{max-width:720px;width:90%;padding:40px}
+
+/* --- Header --- */
+.header{text-align:center;margin-bottom:32px}
+.logo{font-size:13px;line-height:1.15;color:#00ff88;white-space:pre;display:inline-block;text-align:left;text-shadow:0 0 20px rgba(0,255,136,.3)}
+h1{font-size:28px;color:#fff;margin-top:16px;font-weight:400;letter-spacing:4px}
+.subtitle{color:#5a6a7a;font-size:12px;margin-top:6px;letter-spacing:2px}
+
+/* --- Clock --- */
+.clock{text-align:center;margin-bottom:32px}
+.clock-time{font-size:36px;color:#00ff88;font-weight:bold;letter-spacing:3px;text-shadow:0 0 15px rgba(0,255,136,.25)}
+.clock-date{font-size:13px;color:#5a6a7a;margin-top:4px;letter-spacing:1px}
+
+/* --- Stats grid --- */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:32px}
+.stat{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px;text-align:center}
+.stat-value{font-size:20px;color:#00ff88;font-weight:bold}
+.stat-label{font-size:10px;color:#5a6a7a;margin-top:4px;text-transform:uppercase;letter-spacing:1px}
+.bar-bg{background:#1e293b;border-radius:4px;height:6px;margin-top:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s}
+.bar-ok{background:linear-gradient(90deg,#00ff88,#00cc6a)}
+.bar-warn{background:linear-gradient(90deg,#f0ad4e,#e09a3e)}
+.bar-crit{background:linear-gradient(90deg,#ff4444,#cc3333)}
+
+/* --- Disk panel --- */
+.disk-panel{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:20px;margin-bottom:32px}
+.disk-title{font-size:13px;color:#fff;font-weight:bold;margin-bottom:16px;letter-spacing:1px}
+.disk-row{margin-bottom:14px}
+.disk-row:last-child{margin-bottom:0}
+.disk-info{display:flex;justify-content:space-between;margin-bottom:6px}
+.disk-name{font-size:11px;color:#5a6a7a;text-transform:uppercase;letter-spacing:1px}
+.disk-size{font-size:11px;color:#8a9aaa}
+.disk-bar{background:#0a0e17;border:1px solid #1e293b;border-radius:4px;height:20px;overflow:hidden;position:relative}
+.disk-fill{height:100%;border-radius:3px;transition:width .8s ease;background:linear-gradient(90deg,#00ff88,#00cc6a);box-shadow:0 0 10px rgba(0,255,136,.2) inset}
+.disk-fill.warn{background:linear-gradient(90deg,#f0ad4e,#e09a3e);box-shadow:0 0 10px rgba(240,173,78,.2) inset}
+.disk-fill.crit{background:linear-gradient(90deg,#ff4444,#cc3333);box-shadow:0 0 10px rgba(255,68,68,.2) inset}
+.disk-pct{font-size:11px;color:#00ff88;text-align:right;margin-top:4px}
+
+/* --- Services --- */
+.services{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:32px}
+.service{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:16px;text-decoration:none;color:#c5cdd9;transition:all .2s;display:block;cursor:pointer}
+.service:hover{border-color:#00ff88;background:#0f1a2b;transform:translateY(-2px)}
+.service-icon{font-size:24px;margin-bottom:8px}
+.service-name{font-size:14px;color:#fff;font-weight:bold}
+.service-desc{font-size:11px;color:#5a6a7a;margin-top:4px}
+.service-port{font-size:10px;color:#00ff88;margin-top:6px}
+.dot{display:inline-block;width:6px;height:6px;background:#00ff88;border-radius:50%;margin-right:8px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* --- Network panel --- */
+.net-panel{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:20px;font-size:11px;line-height:1.8;margin-bottom:32px}
+.net-header{display:flex;align-items:center;margin-bottom:10px;font-size:13px;color:#fff;font-weight:bold}
+.inet-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:10px;transition:background .3s}
+.inet-ok{background:#f0ad4e;box-shadow:0 0 8px rgba(240,173,78,.5)}
+.inet-fail{background:#ff4444;box-shadow:0 0 8px rgba(255,68,68,.5)}
+
+/* --- Info rows (shared) --- */
+.info-row{display:flex;justify-content:space-between;border-bottom:1px solid #1e293b;padding:4px 0}
+.info-row:last-child{border:none}
+.info-key{color:#5a6a7a}
+.info-val{color:#00ff88;text-align:right}
+
+/* --- LED panel --- */
+.led-panel{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:20px;margin-bottom:32px}
+.led-panel-title{font-size:13px;color:#fff;font-weight:bold;margin-bottom:12px}
+.led-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.led-item{text-align:center;padding:10px 6px}
+.led-indicator{width:10px;height:10px;border-radius:50%;margin:0 auto 8px;transition:all .3s}
+.led-on{background:#00ff88;box-shadow:0 0 10px rgba(0,255,136,.6)}
+.led-off{background:#1e293b;box-shadow:none}
+.led-name{font-size:10px;color:#5a6a7a;text-transform:uppercase;letter-spacing:1px}
+
+/* --- Power buttons --- */
+.power{display:flex;gap:10px;margin-bottom:32px}
+.power-btn{flex:1;padding:14px;border:1px solid #1e293b;border-radius:8px;background:#111827;color:#c5cdd9;font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s;text-align:center}
+.power-btn:hover{transform:translateY(-2px)}
+.btn-reboot:hover{border-color:#f0ad4e;color:#f0ad4e;background:#1a1500}
+.btn-shutdown:hover{border-color:#ff4444;color:#ff4444;background:#1a0000}
+.power-icon{font-size:18px;margin-bottom:4px}
+
+/* --- System info --- */
+.info{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:20px;font-size:11px;line-height:1.8}
+
+footer{text-align:center;margin-top:32px;font-size:10px;color:#2a3a4a}
+
+/* --- Responsive --- */
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .services{grid-template-columns:repeat(2,1fr)}
+  .clock-time{font-size:28px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">  _____ _____                 _____
+ |   __|_   _|___ ___ _ _ __|   __|
+ |   __| | | |  _| .'| | |- _|   __|
+ |_____| |_| |_| |__,|_  |___|_____|
+                      |___|          </div>
+    <h1>ETRAYZ NAS</h1>
+    <div class="subtitle">DEBIAN SQUEEZE &middot; ARM926EJ-S &middot; OX810SE</div>
+  </div>
+
+  <div class="clock">
+    <div class="clock-time" id="clock-time">--:--:--</div>
+    <div class="clock-date" id="clock-date">----</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="cpu">--%</div>
+      <div class="stat-label">CPU</div>
+      <div class="bar-bg"><div class="bar-fill bar-ok" id="cpubar" style="width:0%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="mem">--</div>
+      <div class="stat-label">RAM</div>
+      <div class="bar-bg"><div class="bar-fill bar-ok" id="membar" style="width:0%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="uptime">--</div>
+      <div class="stat-label">Uptime</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="temp">--</div>
+      <div class="stat-label">Bay 1 &deg;C</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="temp2">--</div>
+      <div class="stat-label">Bay 2 &deg;C</div>
+    </div>
+  </div>
+
+  <div class="disk-panel">
+    <div class="disk-title">&#x2581;&#x2582;&#x2583;&#x2584;&#x2585;&#x2586; DISK STORAGE</div>
+    <div class="disk-row">
+      <div class="disk-info"><span class="disk-name">System /</span><span class="disk-size" id="disk-root-size">--</span></div>
+      <div class="disk-bar"><div class="disk-fill" id="disk-root-bar" style="width:0%"></div></div>
+      <div class="disk-pct" id="disk-root-pct">--%</div>
+    </div>
+    <div class="disk-row">
+      <div class="disk-info"><span class="disk-name">Data /home</span><span class="disk-size" id="disk-data-size">--</span></div>
+      <div class="disk-bar"><div class="disk-fill" id="disk-data-bar" style="width:0%"></div></div>
+      <div class="disk-pct" id="disk-data-pct">--%</div>
+    </div>
+  </div>
+
+  <div class="services">
+    <a class="service" id="svc-transmission">
+      <div class="service-icon">&#x21E9;</div>
+      <div class="service-name"><span class="dot"></span>Transmission</div>
+      <div class="service-desc">BitTorrent downloads</div>
+      <div class="service-port">:9091</div>
+    </a>
+    <a class="service" href="#" onclick="prompt('Connect from file manager:','smb://etrayz/home');return false">
+      <div class="service-icon">&#x2750;</div>
+      <div class="service-name"><span class="dot"></span>Samba</div>
+      <div class="service-desc">Network file sharing</div>
+      <div class="service-port">\\etrayz\home</div>
+    </a>
+    <a class="service" href="/cgi-bin/webssh.sh">
+      <div class="service-icon">&#x2756;</div>
+      <div class="service-name"><span class="dot"></span>SSH</div>
+      <div class="service-desc">Web terminal</div>
+      <div class="service-port">ssh sysadmin@etrayz :22</div>
+    </a>
+    <a class="service" href="/settings.html">
+      <div class="service-icon">&#x2699;</div>
+      <div class="service-name"><span class="dot"></span>Settings</div>
+      <div class="service-desc">NAS configuration</div>
+      <div class="service-port">/settings.html</div>
+    </a>
+    <a class="service" id="svc-website">
+      <div class="service-icon">&#x2616;</div>
+      <div class="service-name"><span class="dot"></span>Website</div>
+      <div class="service-desc">Personal site</div>
+      <div class="service-port">:80</div>
+    </a>
+    <a class="service" href="/cgi-bin/aria2-ui.sh">
+      <div class="service-icon">&#x21E9;</div>
+      <div class="service-name"><span class="dot"></span>aria2</div>
+      <div class="service-desc">Download manager</div>
+      <div class="service-port">HTTP/FTP/Magnet</div>
+    </a>
+    <a class="service" href="/cgi-bin/filemgr.sh">
+      <div class="service-icon">&#x2750;</div>
+      <div class="service-name"><span class="dot"></span>Files</div>
+      <div class="service-desc">File manager</div>
+      <div class="service-port">/home</div>
+    </a>
+    <a class="service" href="/cgi-bin/gallery.sh">
+      <div class="service-icon">&#x25A3;</div>
+      <div class="service-name"><span class="dot"></span>Gallery</div>
+      <div class="service-desc">Photo browser</div>
+      <div class="service-port">/Pictures</div>
+    </a>
+    <a class="service" id="svc-monit">
+      <div class="service-icon">&#x2665;</div>
+      <div class="service-name"><span class="dot"></span>Monit</div>
+      <div class="service-desc">Process monitor</div>
+      <div class="service-port">:2812</div>
+    </a>
+  </div>
+
+  <div class="net-panel">
+    <div class="net-header"><span class="inet-dot inet-fail" id="inetdot"></span><span id="inetstatus">Checking...</span></div>
+    <div class="info-row"><span class="info-key">IP / Netmask</span><span class="info-val" id="net-ip">--</span></div>
+    <div class="info-row"><span class="info-key">Gateway</span><span class="info-val" id="net-gw">--</span></div>
+    <div class="info-row"><span class="info-key">DNS</span><span class="info-val" id="net-dns">--</span></div>
+    <div class="info-row"><span class="info-key">&#x25BC; Download</span><span class="info-val" id="net-rx-speed">--</span></div>
+    <div class="info-row"><span class="info-key">&#x25B2; Upload</span><span class="info-val" id="net-tx-speed">--</span></div>
+    <div class="info-row"><span class="info-key">&#x25BC; Total Down</span><span class="info-val" id="net-rx-total">--</span></div>
+    <div class="info-row"><span class="info-key">&#x25B2; Total Up</span><span class="info-val" id="net-tx-total">--</span></div>
+  </div>
+
+  <div class="led-panel">
+    <div class="led-panel-title">Status Indicators</div>
+    <div class="led-grid">
+      <div class="led-item">
+        <div class="led-indicator led-off" id="led-sys"></div>
+        <div class="led-name">System</div>
+      </div>
+      <div class="led-item">
+        <div class="led-indicator led-off" id="led-sata1"></div>
+        <div class="led-name">SATA 1</div>
+      </div>
+      <div class="led-item">
+        <div class="led-indicator led-off" id="led-sata2"></div>
+        <div class="led-name">SATA 2</div>
+      </div>
+      <div class="led-item">
+        <div class="led-indicator led-off" id="led-usb"></div>
+        <div class="led-name">USB Port</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="power">
+    <button class="power-btn btn-reboot" onclick="doPower('reboot')">
+      <div class="power-icon">&#x21BB;</div>Reboot
+    </button>
+    <button class="power-btn btn-shutdown" onclick="doPower('shutdown')">
+      <div class="power-icon">&#x23FB;</div>Shutdown
+    </button>
+  </div>
+
+  <div class="info">
+    <div class="info-row"><span class="info-key">Hostname</span><span class="info-val">etrayz</span></div>
+    <div class="info-row"><span class="info-key">Kernel</span><span class="info-val">2.6.24.4 armv5tejl</span></div>
+    <div class="info-row"><span class="info-key">Platform</span><span class="info-val">OX810SE ARM926EJ-S @ 183 MHz</span></div>
+    <div class="info-row"><span class="info-key">Memory</span><span class="info-val">128 MB DDR</span></div>
+    <div class="info-row"><span class="info-key">Storage</span><span class="info-val">WD5002ABYS 500 GB SATA</span></div>
+    <div class="info-row"><span class="info-key">Network</span><span class="info-val">Gigabit Ethernet (GMAC + CoPro)</span></div>
+    <div class="info-row"><span class="info-key">OS</span><span class="info-val">Debian 6.0 Squeeze armel</span></div>
+  </div>
+
+  <footer><a id="footer-site" style="color:#5a6a7a;text-decoration:none">&#x25C0; Personal Website</a> &middot; Custom firmware &middot; 2026</footer>
+
+</div>
+<script>
+/* --- Server time offset tracking ---
+   We get the NAS time from the API and calculate an offset vs browser time.
+   The clock then ticks locally every second using that offset, so it always
+   shows NAS time even if the browser clock differs. */
+var serverOffset = 0;
+var clockStarted = false;
+
+function parseServerTime(str) {
+  /* "2026-04-02 15:28:10 UTC" */
+  var p = str.match(/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+  if (!p) return null;
+  return new Date(Date.UTC(+p[1],+p[2]-1,+p[3],+p[4],+p[5],+p[6]));
+}
+
+function tickClock() {
+  var now = new Date(Date.now() + serverOffset);
+  var h = ('0'+now.getUTCHours()).slice(-2);
+  var m = ('0'+now.getUTCMinutes()).slice(-2);
+  var s = ('0'+now.getUTCSeconds()).slice(-2);
+  document.getElementById('clock-time').textContent = h+':'+m+':'+s;
+
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var day = days[now.getUTCDay()];
+  var dd = now.getUTCDate();
+  var mon = months[now.getUTCMonth()];
+  var yyyy = now.getUTCFullYear();
+  document.getElementById('clock-date').textContent = day+', '+dd+' '+mon+' '+yyyy+' UTC';
+}
+
+function barClass(pct) {
+  if (pct > 90) return 'bar-fill bar-crit';
+  if (pct > 75) return 'bar-fill bar-warn';
+  return 'bar-fill bar-ok';
+}
+
+/* --- Network speed tracking --- */
+var lastRx = null, lastTx = null, lastNetTime = null;
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+  if (bytes < 1073741824) return (bytes/1048576).toFixed(1) + ' MB';
+  return (bytes/1073741824).toFixed(2) + ' GB';
+}
+
+function formatSpeed(bytesPerSec) {
+  if (bytesPerSec < 1024) return bytesPerSec.toFixed(0) + ' B/s';
+  if (bytesPerSec < 1048576) return (bytesPerSec/1024).toFixed(1) + ' KB/s';
+  return (bytesPerSec/1048576).toFixed(2) + ' MB/s';
+}
+
+function update() {
+  var x = new XMLHttpRequest();
+  x.open('GET','/cgi-bin/status.sh',true);
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4 || x.status !== 200) return;
+    try {
+      var d = JSON.parse(x.responseText);
+
+      /* Stats */
+      var cpuPct = parseInt(d.cpu) || 0;
+      document.getElementById('cpu').textContent = d.cpu+'%';
+      document.getElementById('cpubar').style.width = d.cpu+'%';
+      document.getElementById('cpubar').className = barClass(cpuPct);
+
+      var memPct = Math.round(parseInt(d.mem_used)/parseInt(d.mem_total)*100);
+      document.getElementById('mem').textContent = d.mem_used+'/'+d.mem_total;
+      document.getElementById('membar').style.width = memPct+'%';
+      document.getElementById('membar').className = barClass(memPct);
+
+      document.getElementById('uptime').textContent = d.uptime;
+      document.getElementById('temp').textContent = d.temp ? d.temp+'\u00b0C' : '--';
+      document.getElementById('temp2').textContent = d.temp2 ? d.temp2+'\u00b0C' : '--';
+
+      /* Disk storage bars */
+      if (d.disk_root) {
+        document.getElementById('disk-root-size').textContent = d.disk_root;
+        var rp = parseInt(d.disk_root_pct) || 0;
+        document.getElementById('disk-root-bar').style.width = rp+'%';
+        document.getElementById('disk-root-bar').className = 'disk-fill' + (rp>90?' crit':rp>75?' warn':'');
+        document.getElementById('disk-root-pct').textContent = rp+'%';
+      }
+      if (d.disk) {
+        document.getElementById('disk-data-size').textContent = d.disk;
+        var ddp = parseInt(d.disk_pct) || 0;
+        document.getElementById('disk-data-bar').style.width = ddp+'%';
+        document.getElementById('disk-data-bar').className = 'disk-fill' + (ddp>90?' crit':ddp>75?' warn':'');
+        document.getElementById('disk-data-pct').textContent = ddp+'%';
+      }
+
+      /* Network */
+      document.getElementById('net-ip').textContent = d.ipmask || '--';
+      document.getElementById('net-gw').textContent = d.gw || '--';
+      document.getElementById('net-dns').textContent = d.dns || '--';
+      var dot = document.getElementById('inetdot');
+      var st = document.getElementById('inetstatus');
+      if (d.inet === '1') { dot.className='inet-dot inet-ok'; st.textContent='Internet Connected'; }
+      else { dot.className='inet-dot inet-fail'; st.textContent='Internet Unreachable'; }
+
+      /* LEDs */
+      var leds = [['led-sys','led_sys'],['led-sata1','led_sata1'],['led-sata2','led_sata2'],['led-usb','led_usb']];
+      for (var i=0; i<leds.length; i++) {
+        var el = document.getElementById(leds[i][0]);
+        if (el) el.className = 'led-indicator ' + (d[leds[i][1]]==='1' ? 'led-on' : 'led-off');
+      }
+
+      /* Network speed */
+      if (d.net_rx && d.net_tx) {
+        var rx = parseInt(d.net_rx) || 0;
+        var tx = parseInt(d.net_tx) || 0;
+        var now = Date.now();
+        document.getElementById('net-rx-total').textContent = formatBytes(rx);
+        document.getElementById('net-tx-total').textContent = formatBytes(tx);
+        if (lastRx !== null && lastNetTime !== null) {
+          var dt = (now - lastNetTime) / 1000;
+          if (dt > 0) {
+            var rxSpeed = (rx - lastRx) / dt;
+            var txSpeed = (tx - lastTx) / dt;
+            if (rxSpeed < 0) rxSpeed = 0;
+            if (txSpeed < 0) txSpeed = 0;
+            document.getElementById('net-rx-speed').textContent = formatSpeed(rxSpeed);
+            document.getElementById('net-tx-speed').textContent = formatSpeed(txSpeed);
+          }
+        }
+        lastRx = rx; lastTx = tx; lastNetTime = now;
+      }
+
+      /* Clock sync */
+      if (d.datetime) {
+        var srv = parseServerTime(d.datetime);
+        if (srv) {
+          serverOffset = srv.getTime() - Date.now();
+          if (!clockStarted) { clockStarted = true; setInterval(tickClock, 1000); }
+          tickClock();
+        }
+      }
+    } catch(e) {}
+  };
+  x.send();
+}
+
+/* Service links */
+document.getElementById('svc-transmission').href = 'http://'+location.hostname+':9091';
+document.getElementById('svc-website').href = 'http://'+location.hostname+':80';
+document.getElementById('svc-monit').href = '/cgi-bin/monit-proxy.sh';
+document.getElementById('footer-site').href = 'http://'+location.hostname+':80';
+
+/* Power actions */
+function doPower(action) {
+  var msg = action==='reboot' ? 'Reboot the NAS?' : 'Shut down the NAS? You will need physical access to turn it back on.';
+  if (!confirm(msg)) return;
+  var x = new XMLHttpRequest();
+  x.open('POST','/cgi-bin/power.sh',true);
+  x.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+  x.onreadystatechange = function() {
+    if (x.readyState !== 4) return;
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:#00ff88;font-size:20px">'
+      + (action==='reboot' ? 'Rebooting... page will reload shortly.' : 'Shutting down... goodbye.')
+      + '</div>';
+    if (action==='reboot') setTimeout(function(){ location.reload(); }, 30000);
+  };
+  x.send('action='+action);
+}
+
+update();
+setInterval(update, 5000);
+</script>
+</body>
+</html>

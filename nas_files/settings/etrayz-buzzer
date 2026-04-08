@@ -1,0 +1,80 @@
+#!/bin/sh
+# etrayz-buzzer — Play buzzer patterns via GPIO
+# Usage: etrayz-buzzer <pattern>
+# Patterns: single double triple long sos startup r2d2 imperial
+
+BUZZER=/sys/gpio/devices/buzzer
+[ -w "$BUZZER" ] || { echo "Buzzer not writable"; exit 1; }
+
+beep() { echo 1 > $BUZZER; usleep $(($1*1000)) 2>/dev/null || sleep_ms $1; echo 0 > $BUZZER; }
+gap()  { usleep $(($1*1000)) 2>/dev/null || sleep_ms $1; }
+sleep_ms() {
+    local s=$(($1/1000)) ms=$(($1%1000))
+    [ $s -gt 0 ] && sleep $s
+    # sub-second: best effort with usleep or perl
+    [ $ms -gt 0 ] && perl -e "select(undef,undef,undef,$ms/1000)" 2>/dev/null
+}
+
+case "${1:-single}" in
+    single)
+        beep 150
+        ;;
+    double)
+        beep 100; gap 100; beep 100
+        ;;
+    triple)
+        beep 80; gap 80; beep 80; gap 80; beep 80
+        ;;
+    long)
+        beep 500
+        ;;
+    sos)
+        # ··· ——— ···
+        beep 60; gap 60; beep 60; gap 60; beep 60
+        gap 200
+        beep 200; gap 100; beep 200; gap 100; beep 200
+        gap 200
+        beep 60; gap 60; beep 60; gap 60; beep 60
+        ;;
+    startup)
+        # Ascending tempo burst
+        beep 150; gap 150
+        beep 100; gap 100
+        beep 70; gap 70
+        beep 50; gap 50
+        beep 30; gap 30
+        beep 30; gap 30
+        beep 50; gap 100
+        beep 200
+        ;;
+    r2d2)
+        # Playful random-seeming chirps
+        beep 30; gap 40
+        beep 80; gap 30
+        beep 20; gap 50
+        beep 120; gap 20
+        beep 40; gap 60
+        beep 60; gap 30
+        beep 150; gap 40
+        beep 30; gap 20
+        beep 30; gap 20
+        beep 200
+        ;;
+    imperial)
+        # DUN DUN DUN, DUN-da-DUN, DUN-da-DUN
+        beep 300; gap 300
+        beep 300; gap 300
+        beep 300; gap 300
+        beep 200; gap 100
+        beep 100; gap 100
+        beep 300; gap 300
+        beep 200; gap 100
+        beep 100; gap 100
+        beep 400
+        ;;
+    *)
+        echo "Unknown pattern: $1"
+        echo "Available: single double triple long sos startup r2d2 imperial"
+        exit 1
+        ;;
+esac

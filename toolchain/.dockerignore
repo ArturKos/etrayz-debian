@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!etrayz-run
+!etrayz-toolchain.sh
+!linux-2.6.24.4.tar.gz
+!nas_modules_fw.tar.gz

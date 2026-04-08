@@ -1,0 +1,6 @@
+#!/bin/bash
+# Run a command inside the EtrayZ ARM toolchain container
+# (Now native ARM via QEMU — no sysroot prefix needed)
+export CFLAGS="-march=armv5te -mtune=arm926ej-s -msoft-float -Os"
+export CXXFLAGS="$CFLAGS"
+exec "$@"

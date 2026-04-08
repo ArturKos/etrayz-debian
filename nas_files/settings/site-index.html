@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EtrayZ</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@keyframes flicker{0%{opacity:.97}5%{opacity:.9}10%{opacity:.98}15%{opacity:.92}20%{opacity:1}25%{opacity:.96}30%{opacity:1}100%{opacity:1}}
+@keyframes scanline{0%{top:-100%}100%{top:100%}}
+@keyframes typing{from{width:0}to{width:100%}}
+@keyframes blink{50%{border-color:transparent}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+body{font-family:'Courier New',monospace;background:#000;color:#00ff88;min-height:100vh;overflow:hidden;animation:flicker 4s infinite}
+
+/* CRT effect */
+.crt{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.crt::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.15) 0px,rgba(0,0,0,.15) 1px,transparent 1px,transparent 2px);pointer-events:none;z-index:100}
+.crt::after{content:"";position:fixed;top:-100%;left:0;right:0;height:200%;background:linear-gradient(transparent 50%,rgba(0,255,136,.02) 50%);animation:scanline 8s linear infinite;pointer-events:none;z-index:100}
+
+.container{max-width:700px;width:90%;padding:40px 0;position:relative;z-index:1}
+
+.glow{text-shadow:0 0 10px rgba(0,255,136,.5),0 0 40px rgba(0,255,136,.15)}
+
+.logo{font-size:10px;line-height:1.2;white-space:pre;margin-bottom:24px;opacity:0;animation:fadeIn .8s .2s forwards}
+.title{font-size:32px;font-weight:400;letter-spacing:6px;margin-bottom:6px;opacity:0;animation:fadeIn .8s .5s forwards}
+.tagline{color:#1a6b3e;font-size:13px;letter-spacing:3px;margin-bottom:40px;opacity:0;animation:fadeIn .8s .8s forwards}
+
+.prompt{margin-bottom:32px;opacity:0;animation:fadeIn .8s 1.2s forwards}
+.prompt-line{display:flex;margin-bottom:6px;font-size:13px}
+.prompt-user{color:#5a8a6a;margin-right:0}
+.prompt-text{color:#00ff88;overflow:hidden;white-space:nowrap;border-right:2px solid #00ff88;animation:typing 2s 1.5s steps(40,end) both,blink .8s 3.5s step-end infinite}
+
+.ascii-bar{color:#0a3320;font-size:10px;letter-spacing:2px;margin:20px 0;opacity:0;animation:fadeIn .8s 1s forwards}
+
+.content{opacity:0;animation:fadeIn .8s 1.8s forwards}
+.content p{color:#1a6b3e;font-size:12px;line-height:1.8;margin-bottom:16px}
+.content code{color:#00ff88;background:#0a1a0d;padding:2px 6px;border-radius:3px;font-size:11px}
+.content a{color:#00ff88;text-decoration:none}
+.content a:hover{text-shadow:0 0 8px rgba(0,255,136,.5)}
+</style>
+</head>
+<body>
+<div class="crt">
+<div class="container">
+
+<div class="logo glow">
+      _____ _____                 _____
+     |   __|_   _|___ ___ _ _ __|   __|
+     |   __| | | |  _| .'| | |- _|   __|
+     |_____| |_| |_| |__,|_  |___|_____|
+                           |___|          </div>
+
+<div class="title glow">ETRAYZ</div>
+<div class="tagline">PERSONAL SERVER &middot; ALWAYS ON &middot; ALWAYS YOURS</div>
+
+<div class="ascii-bar">&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;</div>
+
+<div class="prompt">
+  <div class="prompt-line">
+    <span class="prompt-user">sysadmin@etrayz:~$&nbsp;</span>
+    <span class="prompt-text">Welcome. This is your personal website — make it yours.</span>
+  </div>
+</div>
+
+<div class="content">
+  <p>This page is served from <code>/var/www-site/index.html</code> on port 80.<br>
+  Edit it via SSH or Samba to create your own personal landing page.</p>
+
+  <p>
+    <a href="#">&#x25B8; SSH:</a> <code>ssh sysadmin@etrayz</code><br>
+    <a href="#">&#x25B8; Samba:</a> <code>smb://etrayz/home</code> &rarr; navigate to <code>/var/www-site/</code><br>
+    <a href="#">&#x25B8; SCP:</a> <code>scp index.html sysadmin@etrayz:/var/www-site/</code>
+  </p>
+
+  <p style="color:#0a5030;font-size:11px;margin-top:24px">
+    Powered by EtrayZ NAS &middot; OX810SE ARM926EJ-S @ 183 MHz &middot; Debian Squeeze
+  </p>
+</div>
+
+</div>
+</div>
+</body>
+</html>
