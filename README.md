@@ -126,8 +126,9 @@ Beyond the core services, the firmware includes these tools:
 | `nano`         | Simple text editor                             |
 | `vim-tiny`     | Vi-compatible editor                           |
 | `rsync`        | Efficient file transfer/backup                 |
-| `aria2`        | Multi-protocol download manager (HTTP/FTP/BT)  |
-| `curl` `wget`  | HTTP clients                                   |
+| `aria2`        | Multi-protocol download manager (HTTP/FTP/BT) — upgraded to **1.15.1** |
+| `curl`         | HTTP client — upgraded to **7.88.1** (TLS 1.2+, OpenSSL 1.1.1w) |
+| `wget`         | HTTP client — upgraded to **1.20.3** (TLS 1.2+, OpenSSL 1.1.1w) |
 | `smartmontools`| SMART disk health monitoring (`smartctl`)      |
 | `hdparm`       | Disk parameter tuning                          |
 | `ethtool`      | Ethernet diagnostics                           |
@@ -146,7 +147,7 @@ New packages can be installed with `apt-get install`.
 ### Services
 | Service              | Port  | Description                              |
 |----------------------|-------|------------------------------------------|
-| **SSH**              | 22    | OpenSSH server (password + key auth)     |
+| **SSH**              | 22    | Dropbear 2025.89 (compatible with modern SSH clients) |
 | **Samba**            | 445   | Windows file sharing (3 configurable shares) |
 | **Transmission**     | 9091  | BitTorrent with web UI                   |
 | **lighttpd**         | 70    | Dashboard + settings panel               |
@@ -416,6 +417,25 @@ aria2c --load-cookies=cookies.txt --http-user=me --http-passwd=secret \
 
 ---
 
+## Updated Packages
+
+Debian Squeeze is from 2011. Several critical packages have been replaced with
+modern versions compiled natively on the NAS (183 MHz ARM, GCC 4.4.5):
+
+| Package | Original | Updated | Key improvement |
+|---------|----------|---------|-----------------|
+| **Dropbear** | 0.52 (2008) | **2025.89** | Modern SSH — ed25519, ECDSA, ChaCha20; connects from any modern client without legacy flags |
+| **OpenSSL** | 0.9.8o | **1.1.1w** | TLS 1.2/1.3 support; shared libs at `/usr/local/lib/` used by wget, curl, aria2 |
+| **wget** | 1.12 | **1.20.3** | TLS 1.2+ for HTTPS downloads (old wget fails on modern sites) |
+| **curl** | 7.21 | **7.88.1** | TLS 1.2+, modern cipher suites (curl 8.x requires kernel 2.6.27+, unusable here) |
+| **aria2** | 1.10.0 | **1.15.1** | XML-RPC fixes, better HTTPS, WebSocket support (aria2 1.21+ requires C++11, unusable with GCC 4.4.5) |
+
+All updated binaries link against OpenSSL 1.1.1w via `/usr/local/lib/` with rpath,
+leaving the system OpenSSL untouched. The CA bundle is also updated to the current
+Mozilla root certificate list.
+
+---
+
 ## Compiling Software
 
 The NAS has **GCC 4.4.5** installed. Complex packages (OpenSSL, curl, aria2, etc.)
@@ -457,30 +477,24 @@ sudo passwd root
 
 ## SSH from a Modern System
 
-Modern OpenSSH clients disable the legacy algorithms used by Debian Squeeze's SSH server.
-Use these flags to connect:
+The firmware runs **Dropbear 2025.89** — a modern, lightweight SSH server compiled
+natively for this device. It supports current algorithms (ed25519, ECDSA, ChaCha20)
+and connects from any modern SSH client without special flags:
 
 ```bash
-ssh -o HostKeyAlgorithms=+ssh-rsa \
-    -o PubkeyAcceptedAlgorithms=+ssh-rsa \
-    sysadmin@192.168.1.234
+ssh sysadmin@<NAS_IP>
+# Password: etrayz
 ```
 
-Or with `sshpass` for scripting:
-```bash
-sshpass -p etrayz ssh \
-    -o HostKeyAlgorithms=+ssh-rsa \
-    -o PubkeyAcceptedAlgorithms=+ssh-rsa \
-    sysadmin@192.168.1.234
-```
+> **Note:** The original Debian Squeeze `openssh-server` package is not used.
+> It would require legacy algorithm workarounds (`+ssh-rsa` flags) on modern clients.
+> Dropbear 2025.89 eliminates this problem entirely.
 
-To avoid typing the flags every time, add to `~/.ssh/config`:
+For convenience, add to `~/.ssh/config`:
 ```
 Host etrayz
     HostName 192.168.1.234
     User sysadmin
-    HostKeyAlgorithms +ssh-rsa
-    PubkeyAcceptedAlgorithms +ssh-rsa
 ```
 
 Then just: `ssh etrayz`
